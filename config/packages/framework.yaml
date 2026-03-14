@@ -1,0 +1,11 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    session: false
+    serializer: true
+    handle_all_throwables: true
+    validation:
+        enabled: true
+
+when@test:
+    framework:
+        test: true

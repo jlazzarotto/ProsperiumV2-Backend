@@ -1,0 +1,27 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        use_savepoints: true
+        mapping_types:
+            enum: string
+    orm:
+        auto_generate_proxy_classes: true
+        enable_lazy_ghost_objects: true
+        auto_mapping: false
+        report_fields_where_declared: true
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        controller_resolver:
+            auto_mapping: false
+        mappings:
+            Empresa:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Module/Empresa/Domain/Entity'
+                prefix: 'App\Module\Empresa\Domain\Entity'
+                alias: Empresa
+
+when@test:
+    doctrine:
+        dbal:
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'

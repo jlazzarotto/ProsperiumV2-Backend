@@ -1,0 +1,4 @@
+parameters:
+    tenants:
+        default:
+            name: default

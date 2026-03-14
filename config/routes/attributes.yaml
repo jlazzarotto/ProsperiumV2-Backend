@@ -1,0 +1,11 @@
+shared_http:
+    resource:
+        path: ../../src/Shared/UI/Http/Controller/
+        namespace: App\Shared\UI\Http\Controller
+    type: attribute
+
+empresa_http:
+    resource:
+        path: ../../src/Module/Empresa/Controller/
+        namespace: App\Module\Empresa\Controller
+    type: attribute

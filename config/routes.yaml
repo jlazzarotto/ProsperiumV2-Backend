@@ -1,0 +1,2 @@
+shared_http:
+    resource: routes/attributes.yaml
