@@ -3,5 +3,8 @@ services:
 ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "5432"
+      - "127.0.0.1:9999:3306"
+  adminer:
+    ports:
+      - "127.0.0.1:8888:8080"
 ###< doctrine/doctrine-bundle ###
