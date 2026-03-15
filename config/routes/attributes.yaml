@@ -4,8 +4,50 @@ shared_http:
         namespace: App\Shared\UI\Http\Controller
     type: attribute
 
-empresa_http:
+company_http:
     resource:
-        path: ../../src/Module/Empresa/Controller/
-        namespace: App\Module\Empresa\Controller
+        path: ../../src/Company/UI/Http/Controller/
+        namespace: App\Company\UI\Http\Controller
+    type: attribute
+
+identity_http:
+    resource:
+        path: ../../src/Identity/UI/Http/Controller/
+        namespace: App\Identity\UI\Http\Controller
+    type: attribute
+
+cadastro_http:
+    resource:
+        path: ../../src/Cadastro/UI/Http/Controller/
+        namespace: App\Cadastro\UI\Http\Controller
+    type: attribute
+
+financeiro_http:
+    resource:
+        path: ../../src/Financeiro/UI/Http/Controller/
+        namespace: App\Financeiro\UI\Http\Controller
+    type: attribute
+
+tesouraria_http:
+    resource:
+        path: ../../src/Tesouraria/UI/Http/Controller/
+        namespace: App\Tesouraria\UI\Http\Controller
+    type: attribute
+
+cobranca_http:
+    resource:
+        path: ../../src/Cobranca/UI/Http/Controller/
+        namespace: App\Cobranca\UI\Http\Controller
+    type: attribute
+
+bpo_http:
+    resource:
+        path: ../../src/Bpo/UI/Http/Controller/
+        namespace: App\Bpo\UI\Http\Controller
+    type: attribute
+
+contabil_http:
+    resource:
+        path: ../../src/Contabil/UI/Http/Controller/
+        namespace: App\Contabil\UI\Http\Controller
     type: attribute

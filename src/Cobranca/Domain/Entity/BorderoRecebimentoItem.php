@@ -1,0 +1,17 @@
+<?php
+declare(strict_types=1);
+namespace App\Cobranca\Domain\Entity;
+use App\Cobranca\Infrastructure\Persistence\Doctrine\DoctrineBorderoRecebimentoItemRepository;
+use App\Financeiro\Domain\Entity\TituloParcela;
+use Doctrine\ORM\Mapping as ORM;
+#[ORM\Entity(repositoryClass: DoctrineBorderoRecebimentoItemRepository::class)]
+#[ORM\Table(name: 'borderos_recebimento_itens')]
+class BorderoRecebimentoItem
+{
+    #[ORM\Id] #[ORM\GeneratedValue] #[ORM\Column(type: 'bigint', options: ['unsigned' => true])] private ?int $id = null;
+    #[ORM\ManyToOne(targetEntity: BorderoRecebimento::class)] #[ORM\JoinColumn(name: 'bordero_recebimento_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private BorderoRecebimento $bordero;
+    #[ORM\ManyToOne(targetEntity: TituloParcela::class)] #[ORM\JoinColumn(name: 'titulo_parcela_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private TituloParcela $parcela;
+    #[ORM\Column(type: 'decimal', precision: 18, scale: 2)] private string $valor;
+    #[ORM\Column(length: 30, options: ['default' => 'pendente'])] private string $status;
+    public function __construct(BorderoRecebimento $bordero, TituloParcela $parcela, string $valor, string $status = 'pendente') { $this->bordero = $bordero; $this->parcela = $parcela; $this->valor = $valor; $this->status = $status; }
+}

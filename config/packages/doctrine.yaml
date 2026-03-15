@@ -14,12 +14,54 @@ doctrine:
         controller_resolver:
             auto_mapping: false
         mappings:
-            Empresa:
+            Company:
                 is_bundle: false
                 type: attribute
-                dir: '%kernel.project_dir%/src/Module/Empresa/Domain/Entity'
-                prefix: 'App\Module\Empresa\Domain\Entity'
-                alias: Empresa
+                dir: '%kernel.project_dir%/src/Company/Domain/Entity'
+                prefix: 'App\Company\Domain\Entity'
+                alias: Company
+            Identity:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Identity/Domain/Entity'
+                prefix: 'App\Identity\Domain\Entity'
+                alias: Identity
+            Cadastro:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Cadastro/Domain/Entity'
+                prefix: 'App\Cadastro\Domain\Entity'
+                alias: Cadastro
+            Financeiro:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Financeiro/Domain/Entity'
+                prefix: 'App\Financeiro\Domain\Entity'
+                alias: Financeiro
+            Tesouraria:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Tesouraria/Domain/Entity'
+                prefix: 'App\Tesouraria\Domain\Entity'
+                alias: Tesouraria
+            Cobranca:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Cobranca/Domain/Entity'
+                prefix: 'App\Cobranca\Domain\Entity'
+                alias: Cobranca
+            Bpo:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Bpo/Domain/Entity'
+                prefix: 'App\Bpo\Domain\Entity'
+                alias: Bpo
+            Contabil:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Contabil/Domain/Entity'
+                prefix: 'App\Contabil\Domain\Entity'
+                alias: Contabil
 
 when@test:
     doctrine:

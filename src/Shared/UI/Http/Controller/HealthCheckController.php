@@ -24,7 +24,12 @@ final class HealthCheckController
             'service' => 'prosperium-backend',
             'status' => 'ok',
             'timestamp' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
-            'tenantId' => $this->tenantContext->getTenantId(),
+            'tenant' => [
+                'resolved' => $this->tenantContext->hasTenant() || $this->tenantContext->hasCompany(),
+                'dedicatedDatabaseConfigured' => $this->tenantContext->isDedicated()
+                    ? $this->tenantContext->getDedicatedDatabaseUrl() !== null
+                    : null,
+            ],
         ]);
     }
 }

@@ -1,0 +1,17 @@
+<?php
+declare(strict_types=1);
+namespace App\Cadastro\Application\Service;
+use App\Cadastro\Application\DTO\CreateCentroCustoRequest;
+use App\Cadastro\Domain\Entity\CentroCusto;
+use App\Cadastro\Domain\Repository\CentroCustoRepositoryInterface;
+use App\Company\Domain\Repository\CompanyRepositoryInterface;
+use App\Shared\Application\Validation\RequestValidator;
+use App\Shared\Domain\Contract\TransactionRunnerInterface;
+use App\Shared\Domain\Exception\ResourceNotFoundException;
+use App\Shared\Domain\Exception\ValidationException;
+use App\Shared\Infrastructure\Auditoria\AuditoriaLogger;
+final class CentroCustoService {
+    public function __construct(private readonly CentroCustoRepositoryInterface $repo, private readonly CompanyRepositoryInterface $companyRepo, private readonly RequestValidator $validator, private readonly TransactionRunnerInterface $tx, private readonly AuditoriaLogger $audit) {}
+    public function create(CreateCentroCustoRequest $r): CentroCusto { $this->validator->validate($r); $company=$this->companyRepo->findById((int)$r->companyId); if(!$company){throw new ResourceNotFoundException('Company não encontrada.');} $parent=null; if($r->parentId!==null){$parent=$this->repo->findById($r->parentId); if($parent===null||$parent->getCompany()->getId()!==$company->getId()){throw new ValidationException(['parentId'=>['Centro de custo pai inválido para a company.']]);}} return $this->tx->run(function() use($r,$company,$parent): CentroCusto { $c=new CentroCusto($company,$parent,$r->codigo,$r->nome,$r->status); $this->repo->save($c); $this->audit->log((int)$company->getId(),'centro_custo','cadastro.centro_custo.created',['centroCustoId'=>$c->getId()]); return $c;}); }
+    public function list(int $companyId, ?string $status=null): array { return $this->repo->listAll($companyId,$status); }
+}
