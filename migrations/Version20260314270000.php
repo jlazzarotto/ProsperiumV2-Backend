@@ -90,7 +90,7 @@ final class Version20260314270000 extends AbstractMigration
             WHERE NOT EXISTS (SELECT 1 FROM perfis_acesso WHERE codigo = 'aprovador')");
 
         $this->grantProfilePermissions('gestor_financeiro', [
-            'cadastro.%',
+            'cadastros.%',
             'financeiro.%',
             'tesouraria.%',
             'cobranca.%',
@@ -103,7 +103,7 @@ final class Version20260314270000 extends AbstractMigration
         ]);
 
         $this->grantProfilePermissions('operador_financeiro', [
-            'cadastro.%',
+            'cadastros.%',
             'financeiro.titulos.%',
             'financeiro.parcelas.baixar',
             'tesouraria.extratos.%',
@@ -115,7 +115,7 @@ final class Version20260314270000 extends AbstractMigration
         ]);
 
         $this->grantProfilePermissions('analista_bpo', [
-            'cadastro.pessoas.%',
+            'cadastros.pessoas.%',
             'financeiro.titulos.view',
             'tesouraria.conciliacoes.view',
             'bpo.%',

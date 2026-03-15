@@ -51,3 +51,9 @@ contabil_http:
         path: ../../src/Contabil/UI/Http/Controller/
         namespace: App\Contabil\UI\Http\Controller
     type: attribute
+
+integracao_psp_http:
+    resource:
+        path: ../../src/Integracao/Psp/UI/Http/Controller/
+        namespace: App\Integracao\Psp\UI\Http\Controller
+    type: attribute

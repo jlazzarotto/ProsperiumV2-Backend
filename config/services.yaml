@@ -2,6 +2,11 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+        bind:
+            string $baseUrl: '%env(string:PSP_API_BASE_URL)%'
+            string $chave: '%env(string:PSP_API_CHAVE)%'
+            string $senha: '%env(string:PSP_API_SENHA)%'
+            string $projectDir: '%kernel.project_dir%'
 
     App\Company\Domain\Repository\CompanyRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineCompanyRepository'
     App\Company\Domain\Repository\TenantInstanceRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantInstanceRepository'
@@ -18,10 +23,15 @@ services:
     App\Identity\Domain\Repository\UserPerfilRepositoryInterface: '@App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserPerfilRepository'
     App\Identity\Domain\Repository\UserAlcadaRepositoryInterface: '@App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserAlcadaRepository'
     App\Cadastro\Domain\Repository\PessoaRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrinePessoaRepository'
+    App\Cadastro\Domain\Repository\BancoRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineBancoRepository'
+    App\Cadastro\Domain\Repository\PaisRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrinePaisRepository'
+    App\Cadastro\Domain\Repository\UfRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineUfRepository'
+    App\Cadastro\Domain\Repository\MunicipioRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineMunicipioRepository'
     App\Cadastro\Domain\Repository\CategoriaFinanceiraRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineCategoriaFinanceiraRepository'
     App\Cadastro\Domain\Repository\CentroCustoRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineCentroCustoRepository'
     App\Cadastro\Domain\Repository\ContaFinanceiraRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineContaFinanceiraRepository'
     App\Cadastro\Domain\Repository\FormaPagamentoRepositoryInterface: '@App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineFormaPagamentoRepository'
+    App\Integracao\Psp\Domain\Repository\PspConsultaHistoricoRepositoryInterface: '@App\Integracao\Psp\Infrastructure\Persistence\Doctrine\DoctrinePspConsultaHistoricoRepository'
     App\Financeiro\Domain\Repository\TituloRepositoryInterface: '@App\Financeiro\Infrastructure\Persistence\Doctrine\DoctrineTituloRepository'
     App\Financeiro\Domain\Repository\TituloParcelaRepositoryInterface: '@App\Financeiro\Infrastructure\Persistence\Doctrine\DoctrineTituloParcelaRepository'
     App\Financeiro\Domain\Repository\BaixaRepositoryInterface: '@App\Financeiro\Infrastructure\Persistence\Doctrine\DoctrineBaixaRepository'

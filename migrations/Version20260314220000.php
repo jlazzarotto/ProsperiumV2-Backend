@@ -15,20 +15,20 @@ final class Version20260314220000 extends AbstractMigration
         $this->addSql("CREATE TABLE formas_pagamento (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, company_id BIGINT UNSIGNED NOT NULL, codigo VARCHAR(50) NOT NULL, nome VARCHAR(255) NOT NULL, tipo VARCHAR(50) NOT NULL, status VARCHAR(30) NOT NULL DEFAULT 'active', created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)', updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)', INDEX idx_formas_pagamento_company (company_id, status), CONSTRAINT FK_FORMA_PGTO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB");
         $this->addSql("INSERT INTO modulos (codigo, nome, status) SELECT 'cadastro', 'Cadastros Base', 'active' WHERE NOT EXISTS (SELECT 1 FROM modulos WHERE codigo='cadastro')");
         foreach ([
-            ['cadastro.pessoas.view','Listar pessoas'],
-            ['cadastro.pessoas.create','Criar pessoas'],
-            ['cadastro.categorias_financeiras.view','Listar categorias financeiras'],
-            ['cadastro.categorias_financeiras.create','Criar categorias financeiras'],
-            ['cadastro.centros_custo.view','Listar centros de custo'],
-            ['cadastro.centros_custo.create','Criar centros de custo'],
-            ['cadastro.contas_financeiras.view','Listar contas financeiras'],
-            ['cadastro.contas_financeiras.create','Criar contas financeiras'],
-            ['cadastro.formas_pagamento.view','Listar formas de pagamento'],
-            ['cadastro.formas_pagamento.create','Criar formas de pagamento'],
+            ['cadastros.pessoas.view','Listar pessoas'],
+            ['cadastros.pessoas.create_edit','Criar/editar pessoas'],
+            ['cadastros.categorias_financeiras.view','Listar categorias financeiras'],
+            ['cadastros.categorias_financeiras.create_edit','Criar/editar categorias financeiras'],
+            ['cadastros.centros_custo.view','Listar centros de custo'],
+            ['cadastros.centros_custo.create_edit','Criar/editar centros de custo'],
+            ['cadastros.contas_financeiras.view','Listar contas financeiras'],
+            ['cadastros.contas_financeiras.create_edit','Criar/editar contas financeiras'],
+            ['cadastros.formas_pagamento.view','Listar formas de pagamento'],
+            ['cadastros.formas_pagamento.create_edit','Criar/editar formas de pagamento'],
         ] as [$codigo,$nome]) {
             $this->addSql("INSERT INTO permissoes (modulo_id, codigo, nome, status) SELECT id, '$codigo', '$nome', 'active' FROM modulos WHERE codigo='cadastro' AND NOT EXISTS (SELECT 1 FROM permissoes WHERE codigo='$codigo')");
         }
-        $this->addSql("INSERT INTO perfil_acesso_permissoes (perfil_acesso_id, permissao_id) SELECT p.id, perm.id FROM perfis_acesso p JOIN permissoes perm ON perm.codigo LIKE 'cadastro.%' WHERE p.codigo='company_admin' AND NOT EXISTS (SELECT 1 FROM perfil_acesso_permissoes x WHERE x.perfil_acesso_id=p.id AND x.permissao_id=perm.id)");
+        $this->addSql("INSERT INTO perfil_acesso_permissoes (perfil_acesso_id, permissao_id) SELECT p.id, perm.id FROM perfis_acesso p JOIN permissoes perm ON perm.codigo LIKE 'cadastros.%' WHERE p.codigo='company_admin' AND NOT EXISTS (SELECT 1 FROM perfil_acesso_permissoes x WHERE x.perfil_acesso_id=p.id AND x.permissao_id=perm.id)");
     }
     public function down(Schema $schema): void
     {
