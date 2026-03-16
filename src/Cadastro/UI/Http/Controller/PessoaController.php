@@ -66,6 +66,7 @@ final class PessoaController extends AbstractController
         $dto->inscricaoEstadual = $this->nullable($payload['inscricaoEstadual'] ?? null);
         $dto->emailPrincipal = $this->nullable($payload['emailPrincipal'] ?? null);
         $dto->telefonePrincipal = $this->nullable($payload['telefonePrincipal'] ?? null);
+        $dto->classificacao = $this->nullable($payload['classificacao'] ?? null);
         $dto->status = (string) ($payload['status'] ?? 'active');
 
         $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', $dto->companyId, null));
@@ -94,6 +95,7 @@ final class PessoaController extends AbstractController
         $dto->inscricaoEstadual = $this->nullable($payload['inscricaoEstadual'] ?? null);
         $dto->emailPrincipal = $this->nullable($payload['emailPrincipal'] ?? null);
         $dto->telefonePrincipal = $this->nullable($payload['telefonePrincipal'] ?? null);
+        $dto->classificacao = $this->nullable($payload['classificacao'] ?? null);
         $dto->status = (string) ($payload['status'] ?? 'active');
 
         $currentUser = $this->getUser();

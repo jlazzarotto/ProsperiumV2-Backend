@@ -36,21 +36,37 @@ final class DoctrineUserRepository extends ServiceEntityRepository implements Us
         return $this->findOneBy(['email' => mb_strtolower(trim($email))]);
     }
 
+    public function findByEmailAndCompany(string $email, int $companyId): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.email = :email')
+            ->andWhere('u.company = :companyId')
+            ->setParameter('email', mb_strtolower(trim($email)))
+            ->setParameter('companyId', $companyId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function countAll(): int
     {
         return (int) $this->count([]);
     }
 
-    public function listAll(?int $companyId = null): array
+    public function listAll(?int $companyId = null, ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('user')
             ->orderBy('user.id', 'ASC');
 
         if ($companyId !== null) {
             $qb
-                ->innerJoin('App\Identity\Domain\Entity\UserCompany', 'userCompany', 'ON', 'userCompany.user = user')
-                ->andWhere('userCompany.company = :companyId')
+                ->andWhere('user.company = :companyId')
                 ->setParameter('companyId', $companyId);
+        }
+
+        if ($status !== null) {
+            $qb
+                ->andWhere('user.status = :status')
+                ->setParameter('status', $status);
         }
 
         /** @var list<User> $items */

@@ -25,7 +25,7 @@ final class AuthorizationService
     {
         $userId = $user->getId();
 
-        if ($userId === null || $user->getStatus() !== 'active') {
+        if ($userId === null || !$user->isAtivo()) {
             return false;
         }
 

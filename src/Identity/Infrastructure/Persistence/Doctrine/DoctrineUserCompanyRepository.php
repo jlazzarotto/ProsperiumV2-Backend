@@ -28,21 +28,27 @@ final class DoctrineUserCompanyRepository extends ServiceEntityRepository implem
 
     public function userHasCompany(int $userId, int $companyId): bool
     {
-        return $this->count([
-            'user' => $userId,
-            'company' => $companyId,
-            'status' => 'active',
-        ]) > 0;
+        return $this->createQueryBuilder('uc')
+            ->select('COUNT(uc.id)')
+            ->andWhere('uc.user = :userId')
+            ->andWhere('uc.company = :companyId')
+            ->setParameter('userId', $userId)
+            ->setParameter('companyId', $companyId)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
     }
 
     public function isCompanyAdmin(int $userId, int $companyId): bool
     {
-        return $this->count([
-            'user' => $userId,
-            'company' => $companyId,
-            'isCompanyAdmin' => true,
-            'status' => 'active',
-        ]) > 0;
+        return $this->createQueryBuilder('uc')
+            ->select('COUNT(uc.id)')
+            ->andWhere('uc.user = :userId')
+            ->andWhere('uc.company = :companyId')
+            ->andWhere('uc.isCompanyAdmin = true')
+            ->setParameter('userId', $userId)
+            ->setParameter('companyId', $companyId)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
     }
 
     public function listCompanyIdsByUser(int $userId): array

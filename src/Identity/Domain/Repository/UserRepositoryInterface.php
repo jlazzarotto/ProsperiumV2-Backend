@@ -14,10 +14,12 @@ interface UserRepositoryInterface
 
     public function findByEmail(string $email): ?User;
 
+    public function findByEmailAndCompany(string $email, int $companyId): ?User;
+
     public function countAll(): int;
 
     /**
      * @return list<User>
      */
-    public function listAll(?int $companyId = null): array;
+    public function listAll(?int $companyId = null, ?string $status = null): array;
 }

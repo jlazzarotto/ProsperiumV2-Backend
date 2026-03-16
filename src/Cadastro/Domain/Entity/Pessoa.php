@@ -27,6 +27,9 @@ class Pessoa
     #[ORM\Column(name: 'tipo_pessoa', type: 'string', length: 2)]
     private string $tipoPessoa;
 
+    #[ORM\Column(length: 3, nullable: true)]
+    private ?string $classificacao;
+
     #[ORM\Column(name: 'nome_razao', length: 180)]
     private string $nomeRazao;
 
@@ -74,10 +77,12 @@ class Pessoa
         ?string $telefonePrincipal = null,
         string $status = 'active',
         ?int $createdBy = null,
+        ?string $classificacao = null,
     ) {
         $now = new \DateTimeImmutable();
         $this->company = $company;
         $this->tipoPessoa = strtoupper(trim($tipoPessoa));
+        $this->classificacao = self::normalizeClassificacao($classificacao);
         $this->nomeRazao = trim($nomeRazao);
         $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
         $this->documento = $documento !== null ? preg_replace('/\D+/', '', $documento) ?: null : null;
@@ -94,6 +99,7 @@ class Pessoa
     public function getId(): ?int { return $this->id; }
     public function getCompany(): Company { return $this->company; }
     public function getTipoPessoa(): string { return $this->tipoPessoa; }
+    public function getClassificacao(): ?string { return $this->classificacao; }
     public function getNomeRazao(): string { return $this->nomeRazao; }
     public function getNomeFantasia(): ?string { return $this->nomeFantasia; }
     public function getDocumento(): ?string { return $this->documento; }
@@ -117,8 +123,10 @@ class Pessoa
         ?string $telefonePrincipal,
         string $status,
         ?int $updatedBy = null,
+        ?string $classificacao = null,
     ): void {
         $this->tipoPessoa = strtoupper(trim($tipoPessoa));
+        $this->classificacao = self::normalizeClassificacao($classificacao);
         $this->nomeRazao = trim($nomeRazao);
         $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
         $this->documento = $documento !== null ? preg_replace('/\D+/', '', $documento) ?: null : null;
@@ -136,6 +144,26 @@ class Pessoa
         $this->status = 'inactive';
         $this->updatedBy = $updatedBy;
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Normaliza classificacao: mantém apenas C, F, U na ordem canônica.
+     */
+    private static function normalizeClassificacao(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $upper = strtoupper($value);
+        $result = '';
+        foreach (['C', 'F', 'U'] as $char) {
+            if (str_contains($upper, $char)) {
+                $result .= $char;
+            }
+        }
+
+        return $result === '' ? null : $result;
     }
 
     /** @deprecated Use getNomeRazao() */

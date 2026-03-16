@@ -100,3 +100,11 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Kernel.php'
+
+    App\Identity\Infrastructure\Security\EventListener\JwtAuthenticationSuccessListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccess }
+
+    App\Identity\Infrastructure\Security\EventListener\JwtAuthenticationFailureListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_failure, method: onAuthenticationFailure }

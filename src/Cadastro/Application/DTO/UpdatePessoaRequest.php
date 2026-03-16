@@ -32,6 +32,10 @@ final class UpdatePessoaRequest
     #[Assert\Length(max: 30)]
     public ?string $telefonePrincipal = null;
 
+    #[Assert\Length(max: 3)]
+    #[Assert\Regex(pattern: '/^[CFU]{0,3}$/', message: 'Classificacao deve conter apenas C, F, U.')]
+    public ?string $classificacao = null;
+
     #[Assert\NotBlank]
     #[Assert\Choice(choices: ['active', 'inactive'])]
     public string $status = 'active';

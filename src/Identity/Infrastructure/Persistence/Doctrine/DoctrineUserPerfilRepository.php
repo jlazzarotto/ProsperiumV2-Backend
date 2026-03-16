@@ -35,10 +35,10 @@ final class DoctrineUserPerfilRepository extends ServiceEntityRepository impleme
             ->innerJoin('perfilPermissao.permissao', 'permissao')
             ->andWhere('userPerfil.user = :userId')
             ->andWhere('permissao.codigo = :permissionCode')
-            ->andWhere('userPerfil.status = :status')
+            ->andWhere('userPerfil.status IN (:statuses)')
             ->setParameter('userId', $userId)
             ->setParameter('permissionCode', $permissionCode)
-            ->setParameter('status', 'active');
+            ->setParameter('statuses', ['active', 'ativo']);
 
         if ($companyId !== null) {
             $qb->andWhere('userPerfil.company = :companyId')
@@ -85,9 +85,9 @@ final class DoctrineUserPerfilRepository extends ServiceEntityRepository impleme
             ->innerJoin('App\Identity\Domain\Entity\PerfilPermissao', 'perfilPermissao', 'WITH', 'perfilPermissao.perfil = perfil')
             ->innerJoin('perfilPermissao.permissao', 'permissao')
             ->andWhere('userPerfil.user = :userId')
-            ->andWhere('userPerfil.status = :status')
+            ->andWhere('userPerfil.status IN (:statuses)')
             ->setParameter('userId', $userId)
-            ->setParameter('status', 'active')
+            ->setParameter('statuses', ['active', 'ativo'])
             ->orderBy('permissao.codigo', 'ASC');
 
         if ($companyId !== null) {

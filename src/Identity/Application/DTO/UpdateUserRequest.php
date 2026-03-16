@@ -7,7 +7,7 @@ namespace App\Identity\Application\DTO;
 use App\Identity\Domain\Entity\User;
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class CreateUserRequest
+final class UpdateUserRequest
 {
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
@@ -18,9 +18,8 @@ final class CreateUserRequest
     #[Assert\Length(max: 255)]
     public string $email = '';
 
-    #[Assert\NotBlank]
     #[Assert\Length(min: 8, max: 255)]
-    public string $password = '';
+    public ?string $password = null;
 
     #[Assert\Positive]
     public ?int $companyId = null;
@@ -37,14 +36,12 @@ final class CreateUserRequest
     #[Assert\All([new Assert\NotBlank(), new Assert\Length(max: 100)])]
     public array $profileCodes = [];
 
-    public bool $isCompanyAdmin = false;
-
     #[Assert\NotBlank]
     #[Assert\Choice(choices: [User::ROLE_ROOT, User::ROLE_ADMIN])]
     public string $role = User::ROLE_ADMIN;
 
     #[Assert\NotBlank]
-    #[Assert\Choice(choices: [User::STATUS_ATIVO, User::STATUS_INATIVO])]
+    #[Assert\Choice(choices: [User::STATUS_ATIVO, User::STATUS_BLOQUEADO, User::STATUS_INATIVO])]
     public string $status = User::STATUS_ATIVO;
 
     public bool $mfaHabilitado = false;

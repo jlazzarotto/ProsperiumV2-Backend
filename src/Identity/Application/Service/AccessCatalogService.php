@@ -55,9 +55,9 @@ final class AccessCatalogService
 
         foreach ($modules as $modulo) {
             $prefix = $modulo->getCodigo();
-            $canDelete = isset($permissionSet[$prefix . '.delete']);
-            $canManage = isset($permissionSet[$prefix . '.create_edit']) || $canDelete;
-            $canView = isset($permissionSet[$prefix . '.view']) || $canManage;
+            $canDelete = isset($permissionSet[$prefix . '.delete']) || isset($permissionSet[$prefix . '.deletar']);
+            $canManage = isset($permissionSet[$prefix . '.create_edit']) || isset($permissionSet[$prefix . '.criar_editar']) || $canDelete;
+            $canView = isset($permissionSet[$prefix . '.view']) || isset($permissionSet[$prefix . '.ver']) || $canManage;
 
             $result[$prefix] = [
                 'ver' => $canView,

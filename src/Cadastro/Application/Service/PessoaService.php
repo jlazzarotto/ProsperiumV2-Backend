@@ -53,6 +53,7 @@ final class PessoaService
                 $r->telefonePrincipal,
                 $r->status,
                 $currentUserId,
+                $r->classificacao,
             );
             $this->repo->save($p);
             $this->audit->log((int) $company->getId(), 'pessoa', 'cadastro.pessoa.created', ['pessoaId' => $p->getId()]);
@@ -84,6 +85,7 @@ final class PessoaService
                 $r->telefonePrincipal,
                 $r->status,
                 $currentUserId,
+                $r->classificacao,
             );
             $this->repo->save($pessoa);
             $this->audit->log((int) $pessoa->getCompany()->getId(), 'pessoa', 'cadastro.pessoa.updated', ['pessoaId' => $pessoa->getId()]);
