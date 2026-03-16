@@ -62,6 +62,11 @@ final class TenantRequestListener
             return;
         }
 
+        // ROLE_ROOT can access any company
+        if ($user->isRoot()) {
+            return;
+        }
+
         if (!$this->userCompanyRepository->userHasCompany($user->getId(), $companyId)) {
             throw new UnauthorizedOperationException('Usuário autenticado não possui vínculo com a company informada.');
         }

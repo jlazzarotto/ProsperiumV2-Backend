@@ -10,28 +10,35 @@ use Doctrine\DBAL\Tools\DsnParser;
 
 final class TenantAwareConnection extends Connection
 {
-    public function connect()
+    private ?string $currentRuntimeUrl = null;
+
+    public function connect(): bool
     {
-        $this->synchronizeRuntimeParameters();
+        $urlChanged = $this->synchronizeRuntimeParameters();
+
+        if ($urlChanged && $this->isConnected()) {
+            $this->close();
+        }
 
         return parent::connect();
     }
 
-    private function synchronizeRuntimeParameters(): void
+    /**
+     * @return bool true se a URL mudou e precisa reconectar
+     */
+    private function synchronizeRuntimeParameters(): bool
     {
         $runtimeUrl = TenantConnectionRuntime::getDatabaseUrl();
 
         if ($runtimeUrl === null || $runtimeUrl === '') {
-            return;
+            return false;
+        }
+
+        if ($this->currentRuntimeUrl === $runtimeUrl) {
+            return false;
         }
 
         $params = $this->getParams();
-        $currentUrl = isset($params['url']) && is_string($params['url']) ? trim($params['url']) : null;
-
-        if ($currentUrl === $runtimeUrl) {
-            return;
-        }
-
         $parsedParams = (new DsnParser())->parse($runtimeUrl);
         $mergedParams = array_replace($params, $parsedParams, ['url' => $runtimeUrl]);
 
@@ -39,10 +46,15 @@ final class TenantAwareConnection extends Connection
         $property = $reflection->getParentClass()?->getProperty('params');
 
         if ($property === null) {
-            return;
+            return false;
         }
 
         $property->setAccessible(true);
         $property->setValue($this, $mergedParams);
+
+        $previousUrl = $this->currentRuntimeUrl;
+        $this->currentRuntimeUrl = $runtimeUrl;
+
+        return $previousUrl !== null;
     }
 }

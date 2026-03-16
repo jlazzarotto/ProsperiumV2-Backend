@@ -38,7 +38,7 @@ class ConfigParam
     #[ORM\Column(type: 'smallint', options: ['default' => 1])]
     private int $status;
 
-    #[ORM\Column(name: '`restrict`', type: 'smallint', options: ['default' => 2])]
+    #[ORM\Column(name: '`restrict`', type: 'smallint', options: ['default' => 1])]
     private int $restrict;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
@@ -54,7 +54,7 @@ class ConfigParam
         ?string $type = null,
         ?string $description = null,
         int $status = 1,
-        int $restrict = 2,
+        int $restrict = 1,
     ) {
         $now = new \DateTimeImmutable();
         $this->company = $company;

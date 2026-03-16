@@ -82,4 +82,28 @@ class UnidadeNegocio
     {
         return $this->updatedAt;
     }
+
+    public function setCompany(Company $company): void
+    {
+        $this->company = $company;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function setNome(string $nome): void
+    {
+        $this->nome = trim($nome);
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function setAbreviatura(string $abreviatura): void
+    {
+        $this->abreviatura = trim($abreviatura);
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 }

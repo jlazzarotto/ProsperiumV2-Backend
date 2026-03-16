@@ -83,6 +83,8 @@ final class ConfigParamService
                 $request->value,
                 $request->type,
                 $request->description,
+                status: 1,  // Default: ativado
+                restrict: 1, // Default: COM restrição
             );
             $this->repo->save($param);
             $this->audit->log(

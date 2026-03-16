@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Company\UI\Http\Controller;
 
 use App\Company\Application\DTO\CreateUnidadeNegocioRequest;
+use App\Company\Application\DTO\UpdateUnidadeNegocioRequest;
 use App\Company\Application\DTO\UnidadeNegocioResponse;
 use App\Company\Application\Service\UnidadeNegocioService;
 use App\Identity\Domain\Entity\User;
@@ -86,6 +87,25 @@ final class UnidadeNegocioController extends AbstractController
     {
         $unidade = $this->unidadeNegocioService->getById($id);
         $this->guardCompanyAccess((int) $unidade->getCompany()->getId());
+
+        return $this->responseFactory->success([
+            'item' => UnidadeNegocioResponse::fromEntity($unidade),
+        ]);
+    }
+
+    #[Route('/{id}', name: 'api_v1_unidades_update', methods: ['PUT'])]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $dto = new UpdateUnidadeNegocioRequest();
+        $dto->companyId = isset($payload['companyId']) ? (int) $payload['companyId'] : null;
+        $dto->nome = (string) ($payload['nome'] ?? '');
+        $dto->abreviatura = (string) ($payload['abreviatura'] ?? '');
+        $dto->status = (string) ($payload['status'] ?? 'active');
+        $this->guardCompanyAccess((int) $dto->companyId);
+
+        $unidade = $this->unidadeNegocioService->update($id, $dto);
 
         return $this->responseFactory->success([
             'item' => UnidadeNegocioResponse::fromEntity($unidade),

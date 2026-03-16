@@ -76,7 +76,12 @@ services:
     App\Shared\Domain\Contract\AuthenticatedUserProviderInterface: '@App\Shared\Infrastructure\Security\AuthenticatedUserProvider'
     App\Shared\Domain\Contract\TransactionRunnerInterface: '@App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionRunner'
     App\Shared\Domain\Contract\TenantDatabaseRegistryInterface: '@App\Shared\Infrastructure\MultiTenancy\TenantDatabaseConfigRegistry'
+    App\Shared\Domain\Contract\TenantEntityManagerProviderInterface: '@App\Shared\Infrastructure\MultiTenancy\TenantEntityManagerProvider'
     App\Shared\Application\Bus\EventBusInterface: '@App\Shared\Infrastructure\Event\SymfonyEventBus'
+
+    App\Shared\Infrastructure\MultiTenancy\TenantEntityManagerProvider:
+        arguments:
+            $tenantEntityManager: '@doctrine.orm.tenant_entity_manager'
 
     App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionRunner:
         arguments:

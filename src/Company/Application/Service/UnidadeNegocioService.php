@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Company\Application\Service;
 
 use App\Company\Application\DTO\CreateUnidadeNegocioRequest;
+use App\Company\Application\DTO\UpdateUnidadeNegocioRequest;
 use App\Company\Domain\Entity\UnidadeNegocio;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
@@ -92,6 +93,63 @@ final class UnidadeNegocioService
         if ($unidadeNegocio === null) {
             throw new ResourceNotFoundException('Unidade de negócio não encontrada.');
         }
+
+        return $unidadeNegocio;
+    }
+
+    public function update(int $id, UpdateUnidadeNegocioRequest $request): UnidadeNegocio
+    {
+        $this->requestValidator->validate($request);
+
+        $unidadeNegocio = $this->unidadeNegocioRepository->findById($id);
+
+        if ($unidadeNegocio === null) {
+            throw new ResourceNotFoundException('Unidade de negócio não encontrada.');
+        }
+
+        $company = $this->companyRepository->findById((int) $request->companyId);
+
+        if ($company === null) {
+            throw new ResourceNotFoundException('Company não encontrada.');
+        }
+
+        if ($unidadeNegocio->getNome() !== $request->nome && $this->unidadeNegocioRepository->existsByCompanyAndNome((int) $request->companyId, $request->nome)) {
+            throw new ValidationException([
+                'nome' => ['Já existe uma unidade de negócio com este nome na company informada.'],
+            ]);
+        }
+
+        if ($unidadeNegocio->getAbreviatura() !== $request->abreviatura && $this->unidadeNegocioRepository->existsByCompanyAndAbreviatura((int) $request->companyId, $request->abreviatura)) {
+            throw new ValidationException([
+                'abreviatura' => ['Já existe uma unidade de negócio com esta abreviatura na company informada.'],
+            ]);
+        }
+
+        $unidadeNegocio = $this->transactionRunner->run(function () use ($unidadeNegocio, $request, $company): UnidadeNegocio {
+            $unidadeNegocio->setNome($request->nome);
+            $unidadeNegocio->setAbreviatura($request->abreviatura);
+            $unidadeNegocio->setStatus($request->status);
+            $unidadeNegocio->setCompany($company);
+            $this->unidadeNegocioRepository->save($unidadeNegocio);
+            $this->auditoriaLogger->log(
+                (int) $company->getId(),
+                'unidade_negocio',
+                'unidade_negocio.updated',
+                [
+                    'unidadeId' => $unidadeNegocio->getId(),
+                    'abreviatura' => $unidadeNegocio->getAbreviatura(),
+                ]
+            );
+
+            return $unidadeNegocio;
+        });
+
+        $databaseKey = $this->tenantInstanceRepository->findByCompanyId((int) $company->getId())?->getDatabaseKey();
+        if ($databaseKey === null) {
+            throw new ResourceNotFoundException('TenantInstance não encontrada para a company informada.');
+        }
+
+        $this->tenantCatalogProjector->syncUnidadeNegocio($unidadeNegocio);
 
         return $unidadeNegocio;
     }

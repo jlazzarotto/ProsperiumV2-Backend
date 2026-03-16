@@ -3,7 +3,7 @@ parameters:
         shared_base_1:
             name: shared_base_1
             type: shared
-            database_url: '%env(resolve:DATABASE_URL)%'
+            database_url: 'mysql://root:rootpassword@127.0.0.1:9999/pros4661_v100_shared_1?serverVersion=8.0.32&charset=utf8mb4'
         shared_base_2:
             name: shared_base_2
             type: shared

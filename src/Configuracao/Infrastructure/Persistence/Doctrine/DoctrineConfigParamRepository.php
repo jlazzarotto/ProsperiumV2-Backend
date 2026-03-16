@@ -7,32 +7,39 @@ namespace App\Configuracao\Infrastructure\Persistence\Doctrine;
 use App\Company\Domain\Entity\Company;
 use App\Configuracao\Domain\Entity\ConfigParam;
 use App\Configuracao\Domain\Repository\ConfigParamRepositoryInterface;
+use App\Shared\Domain\Contract\TenantEntityManagerProviderInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /** @extends ServiceEntityRepository<ConfigParam> */
 final class DoctrineConfigParamRepository extends ServiceEntityRepository implements ConfigParamRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly TenantEntityManagerProviderInterface $tenantEntityManagerProvider
+    ) {
         parent::__construct($registry, ConfigParam::class);
     }
 
     public function save(ConfigParam $param): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->tenantEntityManagerProvider->getEntityManager();
         $em->persist($param);
         $em->flush();
     }
 
     public function findById(int $id): ?ConfigParam
     {
-        return $this->find($id);
+        $em = $this->tenantEntityManagerProvider->getEntityManager();
+        return $em->getRepository(ConfigParam::class)->find($id);
     }
 
     public function findByCompanyAndName(int $companyId, string $name): ?ConfigParam
     {
-        return $this->createQueryBuilder('p')
+        $em = $this->tenantEntityManagerProvider->getEntityManager();
+        $repo = $em->getRepository(ConfigParam::class);
+
+        return $repo->createQueryBuilder('p')
             ->andWhere('p.company = :companyId')
             ->andWhere('p.name = :name')
             ->setParameter('companyId', $companyId)
@@ -44,7 +51,10 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
 
     public function listAll(int $companyId): array
     {
-        return $this->createQueryBuilder('p')
+        $em = $this->tenantEntityManagerProvider->getEntityManager();
+        $repo = $em->getRepository(ConfigParam::class);
+
+        return $repo->createQueryBuilder('p')
             ->andWhere('p.company = :companyId')
             ->setParameter('companyId', $companyId)
             ->orderBy('p.name', 'ASC')
@@ -54,7 +64,10 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
 
     public function listDistinctTypes(int $companyId): array
     {
-        $rows = $this->createQueryBuilder('p')
+        $em = $this->tenantEntityManagerProvider->getEntityManager();
+        $repo = $em->getRepository(ConfigParam::class);
+
+        $rows = $repo->createQueryBuilder('p')
             ->select('DISTINCT p.type')
             ->andWhere('p.company = :companyId')
             ->andWhere('p.type IS NOT NULL')
@@ -72,6 +85,6 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
 
     public function getCompanyReference(int $companyId): Company
     {
-        return $this->getEntityManager()->getReference(Company::class, $companyId);
+        return $this->tenantEntityManagerProvider->getEntityManager()->getReference(Company::class, $companyId);
     }
 }

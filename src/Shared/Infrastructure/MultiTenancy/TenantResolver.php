@@ -37,6 +37,48 @@ final class TenantResolver
             }
         }
 
+        // Try to resolve from query string (companyId parameter)
+        $queryCompanyId = $request->query->get('companyId');
+        if (is_string($queryCompanyId) && ctype_digit($queryCompanyId)) {
+            return ['tenantId' => $tenantId, 'companyId' => (int) $queryCompanyId];
+        }
+
+        // Try to resolve from JSON payload (companyId in body)
+        $payload = $this->decodeJsonPayload($request);
+        if ($payload !== null && isset($payload['companyId'])) {
+            $payloadCompanyId = $payload['companyId'];
+            if (is_int($payloadCompanyId) && $payloadCompanyId > 0) {
+                return ['tenantId' => $tenantId, 'companyId' => $payloadCompanyId];
+            }
+            if (is_string($payloadCompanyId) && ctype_digit($payloadCompanyId)) {
+                return ['tenantId' => $tenantId, 'companyId' => (int) $payloadCompanyId];
+            }
+        }
+
         return ['tenantId' => $tenantId, 'companyId' => null];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function decodeJsonPayload(Request $request): ?array
+    {
+        $contentType = (string) $request->headers->get('Content-Type', '');
+        if ($contentType !== '' && !str_contains($contentType, 'json')) {
+            return null;
+        }
+
+        $content = $request->getContent();
+        if ($content === '') {
+            return null;
+        }
+
+        try {
+            $payload = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+
+        return is_array($payload) ? $payload : null;
     }
 }

@@ -31,6 +31,11 @@ final class ConfigParamController extends AbstractController
     {
         $companyId = $request->query->getInt('companyId');
 
+        if ($companyId <= 0) {
+            $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+            return $this->responseFactory->error(['message' => 'companyId inválido ou não informado'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $this->denyAccessUnlessGranted(
             PermissionVoter::ATTRIBUTE,
             new PermissionContext('admin.parametrizacao_sistema.view', $companyId),
@@ -60,6 +65,10 @@ final class ConfigParamController extends AbstractController
         $dto->description = isset($payload['description']) ? (string) $payload['description'] : null;
         $dto->originalName = isset($payload['original_name']) ? (string) $payload['original_name'] : null;
 
+        if ($dto->companyId === null || $dto->companyId <= 0) {
+            return $this->responseFactory->error(['message' => 'companyId inválido ou não informado'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $this->denyAccessUnlessGranted(
             PermissionVoter::ATTRIBUTE,
             new PermissionContext('admin.parametrizacao_sistema.create_edit', $dto->companyId),
@@ -85,6 +94,10 @@ final class ConfigParamController extends AbstractController
         $dto->name = (string) ($payload['name'] ?? '');
         $dto->status = isset($payload['status']) ? (int) $payload['status'] : null;
 
+        if ($dto->companyId === null || $dto->companyId <= 0) {
+            return $this->responseFactory->error(['message' => 'companyId inválido ou não informado'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         $this->denyAccessUnlessGranted(
             PermissionVoter::ATTRIBUTE,
             new PermissionContext('admin.parametrizacao_sistema.create_edit', $dto->companyId),
@@ -106,6 +119,10 @@ final class ConfigParamController extends AbstractController
         $dto->companyId = isset($payload['companyId']) ? (int) $payload['companyId'] : null;
         $dto->name = (string) ($payload['name'] ?? '');
         $dto->restrict = isset($payload['restrict']) ? (int) $payload['restrict'] : null;
+
+        if ($dto->companyId === null || $dto->companyId <= 0) {
+            return $this->responseFactory->error(['message' => 'companyId inválido ou não informado'], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
         $this->denyAccessUnlessGranted(
             PermissionVoter::ATTRIBUTE,
