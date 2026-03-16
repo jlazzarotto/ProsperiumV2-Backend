@@ -10,6 +10,7 @@ use App\Company\Application\DTO\UpdateCompanyRequest;
 use App\Company\Application\Service\CompanyService;
 use App\Identity\Domain\Entity\User;
 use App\Identity\Domain\Repository\UserCompanyRepositoryInterface;
+use App\Shared\Domain\Contract\TenantDatabaseRegistryInterface;
 use App\Shared\Infrastructure\Http\JsonResponseFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,8 +23,19 @@ final class CompanyController extends AbstractController
     public function __construct(
         private readonly CompanyService $companyService,
         private readonly UserCompanyRepositoryInterface $userCompanyRepository,
-        private readonly JsonResponseFactory $responseFactory
+        private readonly JsonResponseFactory $responseFactory,
+        private readonly TenantDatabaseRegistryInterface $tenantRegistry
     ) {
+    }
+
+    #[Route('/tenant-options', name: 'api_v1_companies_tenant_options', methods: ['GET'])]
+    public function tenantOptions(): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(User::ROLE_ROOT);
+
+        return $this->responseFactory->success([
+            'items' => $this->tenantRegistry->listTenants(),
+        ]);
     }
 
     #[Route('', name: 'api_v1_companies_create', methods: ['POST'])]

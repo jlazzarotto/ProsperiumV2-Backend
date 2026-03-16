@@ -11,6 +11,7 @@ use App\Company\Domain\Entity\TenantInstance;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Shared\Application\Validation\RequestValidator;
+use App\Shared\Domain\Contract\TenantDatabaseRegistryInterface;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
 use App\Shared\Domain\Exception\ValidationException;
 use App\Shared\Infrastructure\Auditoria\AuditoriaLogger;
@@ -27,6 +28,7 @@ final class CompanyServiceTest extends TestCase
         $service = new CompanyService(
             $companyRepository,
             $tenantRepository,
+            new InMemoryTenantDatabaseRegistry(['prosperium_holding']),
             self::createValidator(),
             new ImmediateTransactionRunner(),
             new AuditoriaLogger($this->createMock(Connection::class))
@@ -54,6 +56,7 @@ final class CompanyServiceTest extends TestCase
         $service = new CompanyService(
             new InMemoryCompanyRepository(),
             $tenantRepository,
+            new InMemoryTenantDatabaseRegistry(['duplicated_key']),
             self::createValidator(),
             new ImmediateTransactionRunner(),
             new AuditoriaLogger($this->createMock(Connection::class))
@@ -63,6 +66,27 @@ final class CompanyServiceTest extends TestCase
         $request->nome = 'Prosperium Duplicate';
         $request->tenancyMode = 'shared';
         $request->databaseKey = 'duplicated_key';
+        $request->status = 'active';
+
+        $this->expectException(ValidationException::class);
+        $service->create($request);
+    }
+
+    public function testCreateCompanyRejectsDatabaseKeyMissingInRegistry(): void
+    {
+        $service = new CompanyService(
+            new InMemoryCompanyRepository(),
+            new InMemoryTenantInstanceRepository(),
+            new InMemoryTenantDatabaseRegistry(['shared_base_1']),
+            self::createValidator(),
+            new ImmediateTransactionRunner(),
+            new AuditoriaLogger($this->createMock(Connection::class))
+        );
+
+        $request = new CreateCompanyRequest();
+        $request->nome = 'Prosperium Missing Registry';
+        $request->tenancyMode = 'shared';
+        $request->databaseKey = 'shared_base_2';
         $request->status = 'active';
 
         $this->expectException(ValidationException::class);
@@ -163,5 +187,25 @@ final class InMemoryTenantInstanceRepository implements TenantInstanceRepository
     public function all(): array
     {
         return $this->items;
+    }
+}
+
+final class InMemoryTenantDatabaseRegistry implements TenantDatabaseRegistryInterface
+{
+    /**
+     * @param list<string> $keys
+     */
+    public function __construct(private readonly array $keys)
+    {
+    }
+
+    public function hasDatabaseKey(string $databaseKey): bool
+    {
+        return in_array(trim($databaseKey), $this->keys, true);
+    }
+
+    public function findDatabaseUrl(string $databaseKey): ?string
+    {
+        return $this->hasDatabaseKey($databaseKey) ? sprintf('mysql://tenant/%s', trim($databaseKey)) : null;
     }
 }

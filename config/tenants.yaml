@@ -1,5 +1,14 @@
 parameters:
     tenants:
-        default:
-            name: default
+        shared_base_1:
+            name: shared_base_1
+            type: shared
+            database_url: '%env(resolve:DATABASE_URL)%'
+        shared_base_2:
+            name: shared_base_2
+            type: shared
+            database_url: null
+        dedicated_base_3:
+            name: dedicated_base_3
+            type: dedicated
             database_url: null

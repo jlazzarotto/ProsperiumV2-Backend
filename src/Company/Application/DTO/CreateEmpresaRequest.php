@@ -19,9 +19,41 @@ final class CreateEmpresaRequest
     #[Assert\Length(max: 255)]
     public ?string $nomeFantasia = null;
 
-    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
+    public ?string $apelido = null;
+
+    #[Assert\Length(max: 50)]
+    public ?string $abreviatura = null;
+
     #[Assert\Length(max: 20)]
-    public string $cnpj = '';
+    public ?string $cnpj = null;
+
+    #[Assert\Length(max: 50)]
+    public ?string $inscricaoEstadual = null;
+
+    #[Assert\Length(max: 50)]
+    public ?string $inscricaoMunicipal = null;
+
+    #[Assert\Length(max: 9)]
+    public ?string $cep = null;
+
+    #[Assert\Length(max: 50)]
+    public ?string $estado = null;
+
+    #[Assert\Length(max: 100)]
+    public ?string $cidade = null;
+
+    #[Assert\Length(max: 255)]
+    public ?string $logradouro = null;
+
+    #[Assert\Length(max: 20)]
+    public ?string $numero = null;
+
+    #[Assert\Length(max: 100)]
+    public ?string $complemento = null;
+
+    #[Assert\Length(max: 100)]
+    public ?string $bairro = null;
 
     #[Assert\NotBlank]
     #[Assert\Choice(choices: ['active', 'inactive'])]

@@ -16,6 +16,7 @@ final class CreateCompanyRequest
     #[Assert\Choice(choices: ['shared', 'dedicated'])]
     public string $tenancyMode = 'shared';
 
+    #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
     public ?string $databaseKey = null;
 

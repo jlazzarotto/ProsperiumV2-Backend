@@ -10,7 +10,7 @@ final class TenantContext
     private ?int $companyId = null;
     private ?string $tenancyMode = null;
     private ?string $databaseKey = null;
-    private ?string $dedicatedDatabaseUrl = null;
+    private ?string $resolvedDatabaseUrl = null;
 
     public function setTenantId(?string $tenantId): void
     {
@@ -62,14 +62,24 @@ final class TenantContext
         return $this->databaseKey;
     }
 
+    public function setResolvedDatabaseUrl(?string $resolvedDatabaseUrl): void
+    {
+        $this->resolvedDatabaseUrl = $resolvedDatabaseUrl !== null ? trim($resolvedDatabaseUrl) : null;
+    }
+
+    public function getResolvedDatabaseUrl(): ?string
+    {
+        return $this->resolvedDatabaseUrl;
+    }
+
     public function setDedicatedDatabaseUrl(?string $dedicatedDatabaseUrl): void
     {
-        $this->dedicatedDatabaseUrl = $dedicatedDatabaseUrl !== null ? trim($dedicatedDatabaseUrl) : null;
+        $this->setResolvedDatabaseUrl($dedicatedDatabaseUrl);
     }
 
     public function getDedicatedDatabaseUrl(): ?string
     {
-        return $this->dedicatedDatabaseUrl;
+        return $this->getResolvedDatabaseUrl();
     }
 
     public function isDedicated(): bool

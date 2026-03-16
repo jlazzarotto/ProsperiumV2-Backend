@@ -72,4 +72,14 @@ class UnidadeNegocio
     {
         return $this->status;
     }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
 }

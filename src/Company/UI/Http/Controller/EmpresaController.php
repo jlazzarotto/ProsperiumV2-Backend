@@ -35,8 +35,19 @@ final class EmpresaController extends AbstractController
         $dto = new CreateEmpresaRequest();
         $dto->companyId = isset($payload['companyId']) ? (int) $payload['companyId'] : null;
         $dto->razaoSocial = (string) ($payload['razaoSocial'] ?? '');
-        $dto->nomeFantasia = isset($payload['nomeFantasia']) ? (string) $payload['nomeFantasia'] : null;
-        $dto->cnpj = (string) ($payload['cnpj'] ?? '');
+        $dto->nomeFantasia = $this->nullableString($payload['nomeFantasia'] ?? null);
+        $dto->apelido = $this->nullableString($payload['apelido'] ?? null);
+        $dto->abreviatura = $this->nullableString($payload['abreviatura'] ?? null);
+        $dto->cnpj = $this->nullableString($payload['cpfCnpj'] ?? $payload['cnpj'] ?? null);
+        $dto->inscricaoEstadual = $this->nullableString($payload['inscricaoEstadual'] ?? null);
+        $dto->inscricaoMunicipal = $this->nullableString($payload['inscricaoMunicipal'] ?? null);
+        $dto->cep = $this->nullableString($payload['cep'] ?? $payload['endereco']['cep'] ?? null);
+        $dto->estado = $this->nullableString($payload['estado'] ?? $payload['endereco']['estado'] ?? null);
+        $dto->cidade = $this->nullableString($payload['cidade'] ?? $payload['endereco']['cidade'] ?? null);
+        $dto->logradouro = $this->nullableString($payload['logradouro'] ?? $payload['endereco']['logradouro'] ?? null);
+        $dto->numero = $this->nullableString($payload['numero'] ?? $payload['endereco']['numero'] ?? null);
+        $dto->complemento = $this->nullableString($payload['complemento'] ?? $payload['endereco']['complemento'] ?? null);
+        $dto->bairro = $this->nullableString($payload['bairro'] ?? $payload['endereco']['bairro'] ?? null);
         $dto->status = (string) ($payload['status'] ?? 'active');
 
         $empresa = $this->empresaService->create($dto);
@@ -101,14 +112,30 @@ final class EmpresaController extends AbstractController
     #[Route('/{id}', name: 'api_v1_empresas_update', methods: ['PUT'])]
     public function update(int $id, Request $request): JsonResponse
     {
-        $this->denyAccessUnlessGranted(User::ROLE_ROOT);
+        $user = $this->requireUser();
+
+        if (!$user->isRoot() && !$user->isAdmin()) {
+            $this->denyAccessUnlessGranted(User::ROLE_ROOT);
+        }
+
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         $dto = new UpdateEmpresaRequest();
         $dto->companyId = isset($payload['companyId']) ? (int) $payload['companyId'] : null;
         $dto->razaoSocial = (string) ($payload['razaoSocial'] ?? '');
-        $dto->nomeFantasia = isset($payload['nomeFantasia']) && $payload['nomeFantasia'] !== '' ? (string) $payload['nomeFantasia'] : null;
-        $dto->cnpj = (string) ($payload['cnpj'] ?? '');
+        $dto->nomeFantasia = $this->nullableString($payload['nomeFantasia'] ?? null);
+        $dto->apelido = $this->nullableString($payload['apelido'] ?? null);
+        $dto->abreviatura = $this->nullableString($payload['abreviatura'] ?? null);
+        $dto->cnpj = $this->nullableString($payload['cpfCnpj'] ?? $payload['cnpj'] ?? null);
+        $dto->inscricaoEstadual = $this->nullableString($payload['inscricaoEstadual'] ?? null);
+        $dto->inscricaoMunicipal = $this->nullableString($payload['inscricaoMunicipal'] ?? null);
+        $dto->cep = $this->nullableString($payload['cep'] ?? $payload['endereco']['cep'] ?? null);
+        $dto->estado = $this->nullableString($payload['estado'] ?? $payload['endereco']['estado'] ?? null);
+        $dto->cidade = $this->nullableString($payload['cidade'] ?? $payload['endereco']['cidade'] ?? null);
+        $dto->logradouro = $this->nullableString($payload['logradouro'] ?? $payload['endereco']['logradouro'] ?? null);
+        $dto->numero = $this->nullableString($payload['numero'] ?? $payload['endereco']['numero'] ?? null);
+        $dto->complemento = $this->nullableString($payload['complemento'] ?? $payload['endereco']['complemento'] ?? null);
+        $dto->bairro = $this->nullableString($payload['bairro'] ?? $payload['endereco']['bairro'] ?? null);
         $dto->status = (string) ($payload['status'] ?? 'active');
 
         $empresa = $this->empresaService->update($id, $dto);
@@ -116,6 +143,16 @@ final class EmpresaController extends AbstractController
         return $this->responseFactory->success([
             'item' => EmpresaResponse::fromEntity($empresa),
         ]);
+    }
+
+    #[Route('/{id}', name: 'api_v1_empresas_delete', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(User::ROLE_ROOT);
+
+        $this->empresaService->delete($id);
+
+        return $this->responseFactory->success([]);
     }
 
     private function requireUser(): User
@@ -127,5 +164,14 @@ final class EmpresaController extends AbstractController
         }
 
         return $user;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
     }
 }

@@ -7,6 +7,7 @@ namespace App\Company\Application\Service;
 use App\Company\Application\DTO\CreateUnidadeNegocioRequest;
 use App\Company\Domain\Entity\UnidadeNegocio;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
+use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Company\Domain\Repository\UnidadeNegocioRepositoryInterface;
 use App\Shared\Application\Validation\RequestValidator;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
@@ -19,9 +20,11 @@ final class UnidadeNegocioService
     public function __construct(
         private readonly UnidadeNegocioRepositoryInterface $unidadeNegocioRepository,
         private readonly CompanyRepositoryInterface $companyRepository,
+        private readonly TenantInstanceRepositoryInterface $tenantInstanceRepository,
         private readonly RequestValidator $requestValidator,
         private readonly TransactionRunnerInterface $transactionRunner,
-        private readonly AuditoriaLogger $auditoriaLogger
+        private readonly AuditoriaLogger $auditoriaLogger,
+        private readonly TenantCatalogProjector $tenantCatalogProjector
     ) {
     }
 
@@ -47,7 +50,7 @@ final class UnidadeNegocioService
             ]);
         }
 
-        return $this->transactionRunner->run(function () use ($request, $company): UnidadeNegocio {
+        $unidadeNegocio = $this->transactionRunner->run(function () use ($request, $company): UnidadeNegocio {
             $unidadeNegocio = new UnidadeNegocio($company, $request->nome, $request->abreviatura, $request->status);
             $this->unidadeNegocioRepository->save($unidadeNegocio);
             $this->auditoriaLogger->log(
@@ -62,6 +65,16 @@ final class UnidadeNegocioService
 
             return $unidadeNegocio;
         });
+
+        $databaseKey = $this->tenantInstanceRepository->findByCompanyId((int) $company->getId())?->getDatabaseKey();
+        if ($databaseKey === null) {
+            throw new ResourceNotFoundException('TenantInstance não encontrada para a company informada.');
+        }
+
+        $this->tenantCatalogProjector->syncCompany($company, $databaseKey);
+        $this->tenantCatalogProjector->syncUnidadeNegocio($unidadeNegocio);
+
+        return $unidadeNegocio;
     }
 
     /**

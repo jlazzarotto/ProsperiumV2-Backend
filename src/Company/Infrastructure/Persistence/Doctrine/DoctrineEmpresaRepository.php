@@ -28,20 +28,44 @@ final class DoctrineEmpresaRepository extends ServiceEntityRepository implements
 
     public function findById(int $id): ?Empresa
     {
-        return $this->find($id);
+        return $this->createQueryBuilder('empresa')
+            ->andWhere('empresa.id = :id')
+            ->andWhere('empresa.deletedAt IS NULL')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
-    public function existsByCompanyAndCnpj(int $companyId, string $cnpj): bool
+    public function existsByCompanyAndCnpj(int $companyId, string $cnpj, ?int $excludeId = null): bool
     {
-        return $this->count([
-            'company' => $companyId,
-            'cnpj' => $cnpj,
-        ]) > 0;
+        $qb = $this->createQueryBuilder('empresa')
+            ->select('COUNT(empresa.id)')
+            ->andWhere('empresa.company = :companyId')
+            ->andWhere('empresa.cnpj = :cnpj')
+            ->andWhere('empresa.deletedAt IS NULL')
+            ->setParameter('companyId', $companyId)
+            ->setParameter('cnpj', $cnpj);
+
+        if ($excludeId !== null) {
+            $qb->andWhere('empresa.id != :excludeId')
+               ->setParameter('excludeId', $excludeId);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    public function softDelete(Empresa $empresa): void
+    {
+        $empresa->softDelete();
+        $entityManager = $this->getEntityManager();
+        $entityManager->persist($empresa);
+        $entityManager->flush();
     }
 
     public function listAll(?int $companyId = null, ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('empresa')
+            ->andWhere('empresa.deletedAt IS NULL')
             ->orderBy('empresa.id', 'ASC');
 
         if ($companyId !== null) {

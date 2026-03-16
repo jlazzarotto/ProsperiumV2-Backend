@@ -1,3 +1,6 @@
+imports:
+    - { resource: tenants.yaml }
+
 services:
     _defaults:
         autowire: true
@@ -7,11 +10,15 @@ services:
             string $chave: '%env(string:PSP_API_CHAVE)%'
             string $senha: '%env(string:PSP_API_SENHA)%'
             string $projectDir: '%kernel.project_dir%'
+            array $tenants: '%tenants%'
 
     App\Company\Domain\Repository\CompanyRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineCompanyRepository'
     App\Company\Domain\Repository\TenantInstanceRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantInstanceRepository'
     App\Company\Domain\Repository\EmpresaRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineEmpresaRepository'
     App\Company\Domain\Repository\UnidadeNegocioRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineUnidadeNegocioRepository'
+    App\Company\Domain\Repository\TenantCompanyContextRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantCompanyContextRepository'
+    App\Company\Domain\Repository\TenantEmpresaContextRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantEmpresaContextRepository'
+    App\Company\Domain\Repository\TenantUnidadeNegocioContextRepositoryInterface: '@App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantUnidadeNegocioContextRepository'
     App\Identity\Domain\Repository\UserRepositoryInterface: '@App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserRepository'
     App\Identity\Domain\Repository\UserCompanyRepositoryInterface: '@App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserCompanyRepository'
     App\Identity\Domain\Repository\UserEmpresaRepositoryInterface: '@App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserEmpresaRepository'
@@ -68,7 +75,25 @@ services:
     App\Contabil\Domain\Repository\SnapshotFluxoCaixaRepositoryInterface: '@App\Contabil\Infrastructure\Persistence\Doctrine\DoctrineSnapshotFluxoCaixaRepository'
     App\Shared\Domain\Contract\AuthenticatedUserProviderInterface: '@App\Shared\Infrastructure\Security\AuthenticatedUserProvider'
     App\Shared\Domain\Contract\TransactionRunnerInterface: '@App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionRunner'
+    App\Shared\Domain\Contract\TenantDatabaseRegistryInterface: '@App\Shared\Infrastructure\MultiTenancy\TenantDatabaseConfigRegistry'
     App\Shared\Application\Bus\EventBusInterface: '@App\Shared\Infrastructure\Event\SymfonyEventBus'
+
+    App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionRunner:
+        arguments:
+            $controlEntityManager: '@doctrine.orm.control_entity_manager'
+            $tenantEntityManager: '@doctrine.orm.tenant_entity_manager'
+
+    App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantCompanyContextRepository:
+        arguments:
+            $tenantEntityManager: '@doctrine.orm.tenant_entity_manager'
+
+    App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantEmpresaContextRepository:
+        arguments:
+            $tenantEntityManager: '@doctrine.orm.tenant_entity_manager'
+
+    App\Company\Infrastructure\Persistence\Doctrine\DoctrineTenantUnidadeNegocioContextRepository:
+        arguments:
+            $tenantEntityManager: '@doctrine.orm.tenant_entity_manager'
 
     App\:
         resource: '../src/'

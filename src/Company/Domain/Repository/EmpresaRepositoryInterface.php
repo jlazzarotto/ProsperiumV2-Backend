@@ -12,7 +12,9 @@ interface EmpresaRepositoryInterface
 
     public function findById(int $id): ?Empresa;
 
-    public function existsByCompanyAndCnpj(int $companyId, string $cnpj): bool;
+    public function existsByCompanyAndCnpj(int $companyId, string $cnpj, ?int $excludeId = null): bool;
+
+    public function softDelete(Empresa $empresa): void;
 
     /**
      * @return list<Empresa>

@@ -26,8 +26,10 @@ final class HealthCheckController
             'timestamp' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
             'tenant' => [
                 'resolved' => $this->tenantContext->hasTenant() || $this->tenantContext->hasCompany(),
+                'databaseKey' => $this->tenantContext->getDatabaseKey(),
+                'databaseConfigured' => $this->tenantContext->getResolvedDatabaseUrl() !== null,
                 'dedicatedDatabaseConfigured' => $this->tenantContext->isDedicated()
-                    ? $this->tenantContext->getDedicatedDatabaseUrl() !== null
+                    ? $this->tenantContext->getResolvedDatabaseUrl() !== null
                     : null,
             ],
         ]);

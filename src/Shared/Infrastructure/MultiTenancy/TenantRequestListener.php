@@ -7,6 +7,7 @@ namespace App\Shared\Infrastructure\MultiTenancy;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Identity\Domain\Entity\User;
 use App\Identity\Domain\Repository\UserCompanyRepositoryInterface;
+use App\Shared\Domain\Contract\TenantDatabaseRegistryInterface;
 use App\Shared\Domain\Exception\UnauthorizedOperationException;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +21,7 @@ final class TenantRequestListener
         private readonly TenantContext $tenantContext,
         private readonly TenantResolver $tenantResolver,
         private readonly TenantInstanceRepositoryInterface $tenantInstanceRepository,
-        private readonly TenantDatabaseConfigRegistry $tenantDatabaseConfigRegistry,
+        private readonly TenantDatabaseRegistryInterface $tenantDatabaseConfigRegistry,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly UserCompanyRepositoryInterface $userCompanyRepository
     ) {
@@ -43,7 +44,8 @@ final class TenantRequestListener
         $this->tenantContext->setCompanyId($resolvedContext['companyId']);
         $this->tenantContext->setTenancyMode(null);
         $this->tenantContext->setDatabaseKey(null);
-        $this->tenantContext->setDedicatedDatabaseUrl(null);
+        $this->tenantContext->setResolvedDatabaseUrl(null);
+        TenantConnectionRuntime::reset();
 
         if ($resolvedContext['companyId'] !== null) {
             $this->synchronizeTenantInstanceContext($resolvedContext['companyId'], $resolvedContext['tenantId']);
@@ -114,22 +116,20 @@ final class TenantRequestListener
 
         $this->tenantContext->setTenancyMode($tenantInstance->getTenancyMode());
         $this->tenantContext->setDatabaseKey($tenantInstance->getDatabaseKey());
+        $this->tenantContext->setTenantId($tenantInstance->getDatabaseKey());
 
-        if ($tenantInstance->getTenancyMode() !== 'dedicated') {
-            return;
-        }
-
-        if ($tenantId !== null && trim($tenantId) !== '' && trim($tenantId) !== $tenantInstance->getDatabaseKey()) {
-            throw new UnauthorizedOperationException('Tenant dedicado deve ser acessado pelo database_key canônico.');
+        if ($tenantId !== null && trim($tenantId) !== '' && !ctype_digit(trim($tenantId)) && trim($tenantId) !== $tenantInstance->getDatabaseKey()) {
+            throw new UnauthorizedOperationException('Tenant deve ser acessado pelo database_key canônico.');
         }
 
         $databaseUrl = $this->tenantDatabaseConfigRegistry->findDatabaseUrl($tenantInstance->getDatabaseKey());
 
         if ($databaseUrl === null) {
-            throw new UnauthorizedOperationException('Tenant dedicado sem configuração operacional de banco.');
+            throw new UnauthorizedOperationException('Tenant sem configuração operacional de banco para o database_key informado.');
         }
 
-        $this->tenantContext->setDedicatedDatabaseUrl($databaseUrl);
+        $this->tenantContext->setResolvedDatabaseUrl($databaseUrl);
+        TenantConnectionRuntime::setDatabaseUrl($databaseUrl);
     }
 
     /**

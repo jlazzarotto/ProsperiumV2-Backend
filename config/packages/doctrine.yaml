@@ -1,69 +1,95 @@
 doctrine:
     dbal:
-        url: '%env(resolve:DATABASE_URL)%'
-        use_savepoints: true
-        mapping_types:
-            enum: string
+        default_connection: control
+        connections:
+            control:
+                url: '%env(resolve:DATABASE_URL)%'
+                use_savepoints: true
+                mapping_types:
+                    enum: string
+            tenant:
+                url: '%env(resolve:DATABASE_URL)%'
+                use_savepoints: true
+                wrapper_class: App\Shared\Infrastructure\Persistence\Doctrine\TenantAwareConnection
+                mapping_types:
+                    enum: string
     orm:
+        default_entity_manager: control
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
-        auto_mapping: false
-        report_fields_where_declared: true
-        validate_xml_mapping: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         controller_resolver:
             auto_mapping: false
-        mappings:
-            Company:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Company/Domain/Entity'
-                prefix: 'App\Company\Domain\Entity'
-                alias: Company
-            Identity:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Identity/Domain/Entity'
-                prefix: 'App\Identity\Domain\Entity'
-                alias: Identity
-            Cadastro:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Cadastro/Domain/Entity'
-                prefix: 'App\Cadastro\Domain\Entity'
-                alias: Cadastro
-            Financeiro:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Financeiro/Domain/Entity'
-                prefix: 'App\Financeiro\Domain\Entity'
-                alias: Financeiro
-            Tesouraria:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Tesouraria/Domain/Entity'
-                prefix: 'App\Tesouraria\Domain\Entity'
-                alias: Tesouraria
-            Cobranca:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Cobranca/Domain/Entity'
-                prefix: 'App\Cobranca\Domain\Entity'
-                alias: Cobranca
-            Bpo:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Bpo/Domain/Entity'
-                prefix: 'App\Bpo\Domain\Entity'
-                alias: Bpo
-            Contabil:
-                is_bundle: false
-                type: attribute
-                dir: '%kernel.project_dir%/src/Contabil/Domain/Entity'
-                prefix: 'App\Contabil\Domain\Entity'
-                alias: Contabil
+        entity_managers:
+            control:
+                connection: control
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                report_fields_where_declared: true
+                mappings:
+                    Company:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Company/Domain/Entity'
+                        prefix: 'App\Company\Domain\Entity'
+                        alias: Company
+                    Identity:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Identity/Domain/Entity'
+                        prefix: 'App\Identity\Domain\Entity'
+                        alias: Identity
+            tenant:
+                connection: tenant
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                report_fields_where_declared: true
+                mappings:
+                    Company:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Company/Domain/Entity'
+                        prefix: 'App\Company\Domain\Entity'
+                        alias: Company
+                    Cadastro:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Cadastro/Domain/Entity'
+                        prefix: 'App\Cadastro\Domain\Entity'
+                        alias: Cadastro
+                    Financeiro:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Financeiro/Domain/Entity'
+                        prefix: 'App\Financeiro\Domain\Entity'
+                        alias: Financeiro
+                    Tesouraria:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Tesouraria/Domain/Entity'
+                        prefix: 'App\Tesouraria\Domain\Entity'
+                        alias: Tesouraria
+                    Cobranca:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Cobranca/Domain/Entity'
+                        prefix: 'App\Cobranca\Domain\Entity'
+                        alias: Cobranca
+                    Bpo:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Bpo/Domain/Entity'
+                        prefix: 'App\Bpo\Domain\Entity'
+                        alias: Bpo
+                    Contabil:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Contabil/Domain/Entity'
+                        prefix: 'App\Contabil\Domain\Entity'
+                        alias: Contabil
 
 when@test:
     doctrine:
         dbal:
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+            connections:
+                control:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+                tenant:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'

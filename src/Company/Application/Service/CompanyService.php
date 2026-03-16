@@ -12,6 +12,7 @@ use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Shared\Application\Validation\RequestValidator;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
+use App\Shared\Domain\Contract\TenantDatabaseRegistryInterface;
 use App\Shared\Domain\Exception\ResourceNotFoundException;
 use App\Shared\Domain\Exception\ValidationException;
 use App\Shared\Infrastructure\Auditoria\AuditoriaLogger;
@@ -21,9 +22,11 @@ final class CompanyService
     public function __construct(
         private readonly CompanyRepositoryInterface $companyRepository,
         private readonly TenantInstanceRepositoryInterface $tenantInstanceRepository,
+        private readonly TenantDatabaseRegistryInterface $tenantDatabaseRegistry,
         private readonly RequestValidator $requestValidator,
         private readonly TransactionRunnerInterface $transactionRunner,
-        private readonly AuditoriaLogger $auditoriaLogger
+        private readonly AuditoriaLogger $auditoriaLogger,
+        private readonly TenantCatalogProjector $tenantCatalogProjector
     ) {
     }
 
@@ -36,24 +39,30 @@ final class CompanyService
 
         $databaseKey = $request->databaseKey !== null ? trim($request->databaseKey) : '';
 
-        if ($request->tenancyMode === 'dedicated' && $databaseKey === '') {
+        if ($databaseKey === '') {
             throw new ValidationException([
-                'databaseKey' => ['databaseKey é obrigatório para tenancy dedicada.'],
+                'databaseKey' => ['databaseKey é obrigatório para todos os tenants.'],
             ]);
         }
 
-        if ($databaseKey !== '' && $this->tenantInstanceRepository->existsByDatabaseKey($databaseKey)) {
+        if (!$this->tenantDatabaseRegistry->hasDatabaseKey($databaseKey) || $this->tenantDatabaseRegistry->findDatabaseUrl($databaseKey) === null) {
+            throw new ValidationException([
+                'databaseKey' => ['databaseKey não está configurado em config/tenants.yaml.'],
+            ]);
+        }
+
+        if ($this->tenantInstanceRepository->existsByDatabaseKey($databaseKey)) {
             throw new ValidationException([
                 'databaseKey' => ['databaseKey já está em uso.'],
             ]);
         }
 
-        return $this->transactionRunner->run(function () use ($request, $databaseKey): array {
+        $result = $this->transactionRunner->run(function () use ($request, $databaseKey): array {
             $company = new Company($request->nome, $request->status);
             $tenantInstance = new TenantInstance(
                 $company,
                 $request->tenancyMode,
-                $databaseKey !== '' ? $databaseKey : sprintf('shared-company-%s', strtolower(bin2hex(random_bytes(6)))),
+                $databaseKey,
                 $request->status
             );
 
@@ -75,6 +84,10 @@ final class CompanyService
                 'tenantInstance' => $tenantInstance,
             ];
         });
+
+        $this->tenantCatalogProjector->syncCompany($result['company'], $databaseKey);
+
+        return $result;
     }
 
     public function hasCompanies(): bool
@@ -140,26 +153,32 @@ final class CompanyService
         $tenantInstance = $result['tenantInstance'];
         $databaseKey = $request->databaseKey !== null ? trim($request->databaseKey) : '';
 
-        if ($request->tenancyMode === 'dedicated' && $databaseKey === '') {
+        if ($databaseKey !== '' && $databaseKey !== $tenantInstance->getDatabaseKey()) {
             throw new ValidationException([
-                'databaseKey' => ['databaseKey é obrigatório para tenancy dedicada.'],
+                'databaseKey' => ['Alteração de databaseKey exige migração formal do tenant.'],
             ]);
         }
 
         if ($databaseKey === '') {
-            $databaseKey = $request->tenancyMode === 'shared'
-                ? $tenantInstance->getDatabaseKey()
-                : '';
+            throw new ValidationException([
+                'databaseKey' => ['databaseKey é obrigatório para todos os tenants.'],
+            ]);
+        }
+
+        if (!$this->tenantDatabaseRegistry->hasDatabaseKey($databaseKey) || $this->tenantDatabaseRegistry->findDatabaseUrl($databaseKey) === null) {
+            throw new ValidationException([
+                'databaseKey' => ['databaseKey não está configurado em config/tenants.yaml.'],
+            ]);
         }
 
         $existingTenantInstance = $this->tenantInstanceRepository->findByDatabaseKey($databaseKey);
-        if ($databaseKey !== '' && $existingTenantInstance !== null && $existingTenantInstance->getId() !== $tenantInstance->getId()) {
+        if ($existingTenantInstance !== null && (int) $existingTenantInstance->getId() !== (int) $tenantInstance->getId()) {
             throw new ValidationException([
                 'databaseKey' => ['databaseKey já está em uso.'],
             ]);
         }
 
-        return $this->transactionRunner->run(function () use ($company, $tenantInstance, $request, $databaseKey): array {
+        $result = $this->transactionRunner->run(function () use ($company, $tenantInstance, $request, $databaseKey): array {
             $company->update($request->nome, $request->status);
             $tenantInstance->update($request->tenancyMode, $databaseKey, $request->status);
 
@@ -182,5 +201,9 @@ final class CompanyService
                 'tenantInstance' => $tenantInstance,
             ];
         });
+
+        $this->tenantCatalogProjector->syncCompany($result['company'], $databaseKey);
+
+        return $result;
     }
 }
