@@ -84,6 +84,12 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Contabil/Domain/Entity'
                         prefix: 'App\Contabil\Domain\Entity'
                         alias: Contabil
+                    Configuracao:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Configuracao/Domain/Entity'
+                        prefix: 'App\Configuracao\Domain\Entity'
+                        alias: Configuracao
 
 when@test:
     doctrine:

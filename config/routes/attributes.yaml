@@ -57,3 +57,9 @@ integracao_psp_http:
         path: ../../src/Integracao/Psp/UI/Http/Controller/
         namespace: App\Integracao\Psp\UI\Http\Controller
     type: attribute
+
+configuracao_http:
+    resource:
+        path: ../../src/Configuracao/UI/Http/Controller/
+        namespace: App\Configuracao\UI\Http\Controller
+    type: attribute
