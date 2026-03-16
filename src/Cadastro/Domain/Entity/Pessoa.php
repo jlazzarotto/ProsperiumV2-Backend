@@ -6,12 +6,13 @@ namespace App\Cadastro\Domain\Entity;
 
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrinePessoaRepository;
 use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrinePessoaRepository::class)]
 #[ORM\Table(name: 'pessoas')]
+#[ORM\UniqueConstraint(name: 'uk_pessoas_company_documento', columns: ['company_id', 'documento'])]
 #[ORM\Index(name: 'idx_pessoas_company', columns: ['company_id', 'status'])]
+#[ORM\Index(name: 'idx_pessoas_company_nome', columns: ['company_id', 'nome_razao'])]
 class Pessoa
 {
     #[ORM\Id]
@@ -23,21 +24,35 @@ class Pessoa
     #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Company $company;
 
-    #[ORM\ManyToOne(targetEntity: Empresa::class)]
-    #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Empresa $empresa;
+    #[ORM\Column(name: 'tipo_pessoa', type: 'string', length: 2)]
+    private string $tipoPessoa;
 
-    #[ORM\Column(length: 255)]
-    private string $nome;
+    #[ORM\Column(name: 'nome_razao', length: 180)]
+    private string $nomeRazao;
 
-    #[ORM\Column(length: 40, nullable: true)]
+    #[ORM\Column(name: 'nome_fantasia', length: 180, nullable: true)]
+    private ?string $nomeFantasia;
+
+    #[ORM\Column(length: 20, nullable: true)]
     private ?string $documento;
 
-    #[ORM\Column(length: 20)]
-    private string $classificacao;
+    #[ORM\Column(name: 'inscricao_estadual', length: 30, nullable: true)]
+    private ?string $inscricaoEstadual;
 
-    #[ORM\Column(length: 30, options: ['default' => 'active'])]
+    #[ORM\Column(name: 'email_principal', length: 160, nullable: true)]
+    private ?string $emailPrincipal;
+
+    #[ORM\Column(name: 'telefone_principal', length: 30, nullable: true)]
+    private ?string $telefonePrincipal;
+
+    #[ORM\Column(length: 20, options: ['default' => 'active'])]
     private string $status;
+
+    #[ORM\Column(name: 'created_by', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $createdBy;
+
+    #[ORM\Column(name: 'updated_by', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $updatedBy;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
@@ -45,24 +60,84 @@ class Pessoa
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, ?Empresa $empresa, string $nome, ?string $documento, string $classificacao, string $status = 'active')
-    {
+    #[ORM\Column(name: 'deleted_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
+
+    public function __construct(
+        Company $company,
+        string $tipoPessoa,
+        string $nomeRazao,
+        ?string $nomeFantasia = null,
+        ?string $documento = null,
+        ?string $inscricaoEstadual = null,
+        ?string $emailPrincipal = null,
+        ?string $telefonePrincipal = null,
+        string $status = 'active',
+        ?int $createdBy = null,
+    ) {
         $now = new \DateTimeImmutable();
         $this->company = $company;
-        $this->empresa = $empresa;
-        $this->nome = trim($nome);
-        $this->documento = $documento !== null ? trim($documento) : null;
-        $this->classificacao = $classificacao;
+        $this->tipoPessoa = strtoupper(trim($tipoPessoa));
+        $this->nomeRazao = trim($nomeRazao);
+        $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
+        $this->documento = $documento !== null ? preg_replace('/\D+/', '', $documento) ?: null : null;
+        $this->inscricaoEstadual = $inscricaoEstadual !== null ? trim($inscricaoEstadual) : null;
+        $this->emailPrincipal = $emailPrincipal !== null ? trim($emailPrincipal) : null;
+        $this->telefonePrincipal = $telefonePrincipal !== null ? trim($telefonePrincipal) : null;
         $this->status = $status;
+        $this->createdBy = $createdBy;
+        $this->updatedBy = $createdBy;
         $this->createdAt = $now;
         $this->updatedAt = $now;
     }
 
     public function getId(): ?int { return $this->id; }
     public function getCompany(): Company { return $this->company; }
-    public function getEmpresa(): ?Empresa { return $this->empresa; }
-    public function getNome(): string { return $this->nome; }
+    public function getTipoPessoa(): string { return $this->tipoPessoa; }
+    public function getNomeRazao(): string { return $this->nomeRazao; }
+    public function getNomeFantasia(): ?string { return $this->nomeFantasia; }
     public function getDocumento(): ?string { return $this->documento; }
-    public function getClassificacao(): string { return $this->classificacao; }
+    public function getInscricaoEstadual(): ?string { return $this->inscricaoEstadual; }
+    public function getEmailPrincipal(): ?string { return $this->emailPrincipal; }
+    public function getTelefonePrincipal(): ?string { return $this->telefonePrincipal; }
     public function getStatus(): string { return $this->status; }
+    public function getCreatedBy(): ?int { return $this->createdBy; }
+    public function getUpdatedBy(): ?int { return $this->updatedBy; }
+    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
+    public function getDeletedAt(): ?\DateTimeImmutable { return $this->deletedAt; }
+
+    public function update(
+        string $tipoPessoa,
+        string $nomeRazao,
+        ?string $nomeFantasia,
+        ?string $documento,
+        ?string $inscricaoEstadual,
+        ?string $emailPrincipal,
+        ?string $telefonePrincipal,
+        string $status,
+        ?int $updatedBy = null,
+    ): void {
+        $this->tipoPessoa = strtoupper(trim($tipoPessoa));
+        $this->nomeRazao = trim($nomeRazao);
+        $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
+        $this->documento = $documento !== null ? preg_replace('/\D+/', '', $documento) ?: null : null;
+        $this->inscricaoEstadual = $inscricaoEstadual !== null ? trim($inscricaoEstadual) : null;
+        $this->emailPrincipal = $emailPrincipal !== null ? trim($emailPrincipal) : null;
+        $this->telefonePrincipal = $telefonePrincipal !== null ? trim($telefonePrincipal) : null;
+        $this->status = $status;
+        $this->updatedBy = $updatedBy;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function softDelete(?int $updatedBy = null): void
+    {
+        $this->deletedAt = new \DateTimeImmutable();
+        $this->status = 'inactive';
+        $this->updatedBy = $updatedBy;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /** @deprecated Use getNomeRazao() */
+    public function getNome(): string { return $this->nomeRazao; }
 }

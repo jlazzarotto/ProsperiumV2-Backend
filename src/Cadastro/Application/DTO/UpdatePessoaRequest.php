@@ -6,12 +6,8 @@ namespace App\Cadastro\Application\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class CreatePessoaRequest
+final class UpdatePessoaRequest
 {
-    #[Assert\NotNull]
-    #[Assert\Positive]
-    public ?int $companyId = null;
-
     #[Assert\NotBlank]
     #[Assert\Choice(choices: ['PF', 'PJ'])]
     public string $tipoPessoa = 'PF';
