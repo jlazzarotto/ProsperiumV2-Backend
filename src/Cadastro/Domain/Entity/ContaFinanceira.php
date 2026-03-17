@@ -7,9 +7,8 @@ namespace App\Cadastro\Domain\Entity;
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineContaFinanceiraRepository;
 use App\Cadastro\Domain\Entity\Banco;
 use App\Cadastro\Domain\Entity\Pessoa;
-use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\Empresa;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrineContaFinanceiraRepository::class)]
@@ -23,9 +22,8 @@ class ContaFinanceira
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\ManyToOne(targetEntity: Empresa::class)]
     #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
@@ -79,10 +77,10 @@ class ContaFinanceira
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, Empresa $empresa, ?UnidadeNegocio $unidade, ?Banco $banco, ?Pessoa $titularPessoa, string $codigo, string $nome, string $tipo, ?string $agencia = null, ?string $contaNumero = null, ?string $contaDigito = null, float $saldoInicial = 0.0, ?\DateTimeImmutable $dataSaldoInicial = null, bool $permiteMovimentoNegativo = false, string $status = 'active')
+    public function __construct(int $companyId, Empresa $empresa, ?UnidadeNegocio $unidade, ?Banco $banco, ?Pessoa $titularPessoa, string $codigo, string $nome, string $tipo, ?string $agencia = null, ?string $contaNumero = null, ?string $contaDigito = null, float $saldoInicial = 0.0, ?\DateTimeImmutable $dataSaldoInicial = null, bool $permiteMovimentoNegativo = false, string $status = 'active')
     {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->empresa = $empresa;
         $this->unidade = $unidade;
         $this->banco = $banco;
@@ -102,7 +100,7 @@ class ContaFinanceira
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getEmpresa(): Empresa { return $this->empresa; }
     public function getUnidade(): ?UnidadeNegocio { return $this->unidade; }
     public function getBanco(): ?Banco { return $this->banco; }

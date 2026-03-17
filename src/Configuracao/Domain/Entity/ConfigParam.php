@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Configuracao\Domain\Entity;
 
-use App\Company\Domain\Entity\Company;
 use App\Configuracao\Infrastructure\Persistence\Doctrine\DoctrineConfigParamRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -19,9 +18,8 @@ class ConfigParam
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\Column(length: 255)]
     private string $name;
@@ -48,7 +46,7 @@ class ConfigParam
     private \DateTimeImmutable $updatedAt;
 
     public function __construct(
-        Company $company,
+        int $companyId,
         string $name,
         string $value,
         ?string $type = null,
@@ -57,7 +55,7 @@ class ConfigParam
         int $restrict = 1,
     ) {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->name = trim($name);
         $this->value = trim($value);
         $this->type = $type !== null ? trim($type) : null;
@@ -69,7 +67,7 @@ class ConfigParam
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getName(): string { return $this->name; }
     public function getType(): ?string { return $this->type; }
     public function getValue(): string { return $this->value; }

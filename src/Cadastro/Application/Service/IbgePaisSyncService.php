@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Application\Service;
 
-use App\Cadastro\Domain\Entity\Pais;
+use App\Cadastro\Domain\Entity\Referencia\Pais;
 use App\Cadastro\Domain\Repository\PaisRepositoryInterface;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
 use Doctrine\ORM\EntityManagerInterface;

@@ -40,7 +40,7 @@ final class DoctrinePessoaRepository extends ServiceEntityRepository implements 
     {
         $qb = $this->createQueryBuilder('p')
             ->select('COUNT(p.id)')
-            ->andWhere('p.company = :companyId')
+            ->andWhere('p.companyId = :companyId')
             ->andWhere('p.documento = :documento')
             ->andWhere('p.deletedAt IS NULL')
             ->setParameter('companyId', $companyId)
@@ -64,7 +64,7 @@ final class DoctrinePessoaRepository extends ServiceEntityRepository implements 
     public function listAll(int $companyId, ?string $tipoPessoa = null, ?string $status = null): array
     {
         $qb = $this->createQueryBuilder('p')
-            ->andWhere('p.company = :companyId')
+            ->andWhere('p.companyId = :companyId')
             ->andWhere('p.deletedAt IS NULL')
             ->setParameter('companyId', $companyId)
             ->orderBy('p.nomeRazao', 'ASC');

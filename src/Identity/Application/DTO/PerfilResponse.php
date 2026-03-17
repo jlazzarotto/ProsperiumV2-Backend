@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Application\DTO;
 
-use App\Identity\Domain\Entity\Perfil;
+use App\Identity\Domain\Entity\Tenant\Perfil;
 
 final class PerfilResponse
 {
@@ -15,7 +15,7 @@ final class PerfilResponse
     {
         return [
             'id' => $perfil->getId(),
-            'companyId' => $perfil->getCompany()?->getId(),
+            'companyId' => $perfil->getCompanyId(),
             'codigo' => $perfil->getCodigo(),
             'nome' => $perfil->getNome(),
             'tipo' => $perfil->getTipo(),

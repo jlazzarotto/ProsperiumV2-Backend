@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Domain\Repository;
 
-use App\Identity\Domain\Entity\PerfilPermissao;
+use App\Identity\Domain\Entity\Tenant\PerfilPermissao;
 
 interface PerfilPermissaoRepositoryInterface
 {

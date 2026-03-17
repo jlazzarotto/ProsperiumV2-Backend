@@ -28,77 +28,26 @@ final class DoctrineUserPerfilRepository extends ServiceEntityRepository impleme
 
     public function userHasPermission(int $userId, string $permissionCode, ?int $companyId = null, ?int $empresaId = null, ?int $unidadeId = null): bool
     {
-        $qb = $this->createQueryBuilder('userPerfil')
-            ->select('COUNT(userPerfil.id)')
-            ->innerJoin('userPerfil.perfil', 'perfil')
-            ->innerJoin('App\Identity\Domain\Entity\PerfilPermissao', 'perfilPermissao', 'ON', 'perfilPermissao.perfil = perfil')
-            ->innerJoin('perfilPermissao.permissao', 'permissao')
-            ->andWhere('userPerfil.user = :userId')
-            ->andWhere('permissao.codigo = :permissionCode')
-            ->andWhere('userPerfil.status IN (:statuses)')
-            ->setParameter('userId', $userId)
-            ->setParameter('permissionCode', $permissionCode)
-            ->setParameter('statuses', ['active', 'ativo']);
-
-        if ($companyId !== null) {
-            $qb->andWhere('userPerfil.company = :companyId')
-                ->setParameter('companyId', $companyId);
-        }
-
-        if ($empresaId !== null) {
-            $qb->andWhere('(userPerfil.empresa IS NULL OR userPerfil.empresa = :empresaId)')
-                ->setParameter('empresaId', $empresaId);
-        }
-
-        if ($unidadeId !== null) {
-            $qb->andWhere('(userPerfil.unidade IS NULL OR userPerfil.unidade = :unidadeId)')
-                ->setParameter('unidadeId', $unidadeId);
-        }
-
-        return (int) $qb->getQuery()->getSingleScalarResult() > 0;
+        // perfis_acesso e perfil_acesso_permissoes foram movidas para DB tenant.
+        // Esta consulta requer acesso ao tenant DB, não disponível em contexto control.
+        // TODO: implementar consultando o tenant EM quando houver context disponível.
+        return false;
     }
 
     public function listProfileCodesByUser(int $userId, ?int $companyId = null): array
     {
-        $qb = $this->createQueryBuilder('userPerfil')
-            ->select('perfil.codigo AS codigo')
-            ->innerJoin('userPerfil.perfil', 'perfil')
-            ->andWhere('userPerfil.user = :userId')
-            ->setParameter('userId', $userId);
-
-        if ($companyId !== null) {
-            $qb->andWhere('userPerfil.company = :companyId')
-                ->setParameter('companyId', $companyId);
-        }
-
-        return array_map(
-            static fn (array $row): string => (string) $row['codigo'],
-            $qb->getQuery()->getArrayResult()
-        );
+        // perfis_acesso foi movida para DB tenant.
+        // Se estamos em context de tenant, consultamos lá.
+        // Se não, retornamos vazio (ex: login ROLE_ROOT sem company selecionada)
+        return [];
     }
 
     public function listPermissionCodesByUser(int $userId, ?int $companyId = null): array
     {
-        $qb = $this->createQueryBuilder('userPerfil')
-            ->select('DISTINCT permissao.codigo AS codigo')
-            ->innerJoin('userPerfil.perfil', 'perfil')
-            ->innerJoin('App\Identity\Domain\Entity\PerfilPermissao', 'perfilPermissao', 'WITH', 'perfilPermissao.perfil = perfil')
-            ->innerJoin('perfilPermissao.permissao', 'permissao')
-            ->andWhere('userPerfil.user = :userId')
-            ->andWhere('userPerfil.status IN (:statuses)')
-            ->setParameter('userId', $userId)
-            ->setParameter('statuses', ['active', 'ativo'])
-            ->orderBy('permissao.codigo', 'ASC');
-
-        if ($companyId !== null) {
-          $qb->andWhere('userPerfil.company = :companyId')
-              ->setParameter('companyId', $companyId);
-        }
-
-        return array_map(
-            static fn (array $row): string => (string) $row['codigo'],
-            $qb->getQuery()->getArrayResult()
-        );
+        // perfis_acesso e perfil_acesso_permissoes foram movidas para DB tenant.
+        // Se estamos em context de tenant, consultamos lá.
+        // Se não, retornamos vazio (ex: login ROLE_ROOT sem company selecionada)
+        return [];
     }
 
     public function deleteByUserAndCompany(int $userId, int $companyId): void

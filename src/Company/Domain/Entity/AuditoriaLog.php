@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Company\Domain\Entity;
 
-use App\Identity\Domain\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -20,21 +19,17 @@ class AuditoriaLog
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Company $company = null;
+    #[ORM\Column(name: 'company_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $companyId = null;
 
-    #[ORM\ManyToOne(targetEntity: Empresa::class)]
-    #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Empresa $empresa = null;
+    #[ORM\Column(name: 'empresa_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $empresaId = null;
 
-    #[ORM\ManyToOne(targetEntity: UnidadeNegocio::class)]
-    #[ORM\JoinColumn(name: 'unidade_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?UnidadeNegocio $unidade = null;
+    #[ORM\Column(name: 'unidade_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $unidadeId = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?User $user = null;
+    #[ORM\Column(name: 'user_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $userId = null;
 
     #[ORM\Column(length: 100)]
     private string $recurso;

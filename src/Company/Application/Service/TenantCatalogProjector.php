@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Company\Application\Service;
 
 use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\Empresa;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Shared\Domain\Contract\TenantDatabaseRegistryInterface;
 use App\Shared\Domain\Exception\ResourceNotFoundException;
@@ -46,7 +46,7 @@ final class TenantCatalogProjector
 
     public function syncEmpresa(Empresa $empresa): void
     {
-        $companyId = (int) $empresa->getCompany()->getId();
+        $companyId = (int) $empresa->getCompanyId();
         $databaseKey = $this->resolveDatabaseKeyByCompanyId($companyId);
         $connection = $this->openTenantConnection($databaseKey);
 
@@ -113,7 +113,7 @@ final class TenantCatalogProjector
 
     public function syncUnidadeNegocio(UnidadeNegocio $unidadeNegocio): void
     {
-        $companyId = (int) $unidadeNegocio->getCompany()->getId();
+        $companyId = (int) $unidadeNegocio->getCompanyId();
         $databaseKey = $this->resolveDatabaseKeyByCompanyId($companyId);
         $connection = $this->openTenantConnection($databaseKey);
 

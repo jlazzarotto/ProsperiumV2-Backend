@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Domain\Repository;
 
-use App\Identity\Domain\Entity\Perfil;
+use App\Identity\Domain\Entity\Tenant\Perfil;
 
 interface PerfilRepositoryInterface
 {

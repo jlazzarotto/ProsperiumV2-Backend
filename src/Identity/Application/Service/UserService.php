@@ -86,7 +86,7 @@ final class UserService
         $empresas = [];
         foreach ($request->empresaIds as $empresaId) {
             $empresa = $this->empresaRepository->findById($empresaId);
-            if ($empresa === null || $empresa->getCompany()->getId() !== $company->getId()) {
+            if ($empresa === null || $empresa->getCompanyId() !== $company->getId()) {
                 throw new ValidationException([
                     'empresaIds' => ['Empresa invalida para a company informada.'],
                 ]);
@@ -97,7 +97,7 @@ final class UserService
         $unidades = [];
         foreach ($request->unidadeIds as $unidadeId) {
             $unidade = $this->unidadeRepository->findById($unidadeId);
-            if ($unidade === null || $unidade->getCompany()->getId() !== $company->getId()) {
+            if ($unidade === null || $unidade->getCompanyId() !== $company->getId()) {
                 throw new ValidationException([
                     'unidadeIds' => ['Unidade invalida para a company informada.'],
                 ]);
@@ -129,15 +129,15 @@ final class UserService
             $this->userCompanyRepository->save(new UserCompany($user, $company, true, $request->status));
 
             foreach ($empresas as $empresa) {
-                $this->userEmpresaRepository->save(new \App\Identity\Domain\Entity\UserEmpresa($user, $company, $empresa, $request->status));
+                $this->userEmpresaRepository->save(new \App\Identity\Domain\Entity\UserEmpresa($user, $company, (int) $empresa->getId(), $request->status));
             }
 
             foreach ($unidades as $unidade) {
-                $this->userUnidadeRepository->save(new \App\Identity\Domain\Entity\UserUnidade($user, $company, $unidade, $request->status));
+                $this->userUnidadeRepository->save(new \App\Identity\Domain\Entity\UserUnidade($user, $company, (int) $unidade->getId(), $request->status));
             }
 
             foreach ($perfis as $perfil) {
-                $this->userPerfilRepository->save(new UserPerfil($user, $company, $perfil, null, null, $request->status));
+                $this->userPerfilRepository->save(new UserPerfil($user, $company, (int) $perfil->getId(), null, null, $request->status));
             }
 
             $this->auditoriaLogger->log(
@@ -347,7 +347,7 @@ final class UserService
         $this->userRepository->save($user);
 
         $this->auditoriaLogger->log(
-            $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+            $user->getCompany()?->getId(),
             'user',
             'identity.user.desbloqueado',
             [
@@ -392,7 +392,7 @@ final class UserService
             $this->userPerfilRepository->deleteByUserAndCompany((int) $user->getId(), (int) $company->getId());
 
             foreach ($perfis as $perfil) {
-                $this->userPerfilRepository->save(new UserPerfil($user, $company, $perfil));
+                $this->userPerfilRepository->save(new UserPerfil($user, $company, (int) $perfil->getId()));
             }
         });
 
@@ -419,7 +419,7 @@ final class UserService
         $this->userRepository->save($user);
 
         $this->auditoriaLogger->log(
-            $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+            $user->getCompany()?->getId(),
             'user',
             'identity.user.login',
             [
@@ -438,7 +438,7 @@ final class UserService
         $this->userRepository->save($user);
 
         $this->auditoriaLogger->log(
-            $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+            $user->getCompany()?->getId(),
             'user',
             'identity.user.login_failed',
             [
@@ -461,7 +461,7 @@ final class UserService
 
         foreach ($empresaIds as $empresaId) {
             $empresa = $this->empresaRepository->findById($empresaId);
-            if ($empresa === null || $empresa->getCompany()->getId() !== $company->getId()) {
+            if ($empresa === null || $empresa->getCompanyId() !== $company->getId()) {
                 throw new ValidationException([
                     'empresaIds' => ['Empresa invalida para a company informada.'],
                 ]);
@@ -480,7 +480,7 @@ final class UserService
 
         foreach ($unidadeIds as $unidadeId) {
             $unidade = $this->unidadeRepository->findById($unidadeId);
-            if ($unidade === null || $unidade->getCompany()->getId() !== $company->getId()) {
+            if ($unidade === null || $unidade->getCompanyId() !== $company->getId()) {
                 throw new ValidationException([
                     'unidadeIds' => ['Unidade invalida para a company informada.'],
                 ]);
@@ -503,7 +503,7 @@ final class UserService
         $this->userPerfilRepository->deleteByUserAndCompany((int) $user->getId(), (int) $company->getId());
 
         foreach ($perfis as $perfil) {
-            $this->userPerfilRepository->save(new UserPerfil($user, $company, $perfil));
+            $this->userPerfilRepository->save(new UserPerfil($user, $company, (int) $perfil->getId()));
         }
     }
 }

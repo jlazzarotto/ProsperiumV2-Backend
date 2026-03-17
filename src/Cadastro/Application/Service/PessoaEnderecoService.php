@@ -32,7 +32,7 @@ final class PessoaEnderecoService
 
         return $this->tx->run(function () use ($r, $pessoa, $currentUserId): PessoaEndereco {
             $e = new PessoaEndereco(
-                $pessoa->getCompany(),
+                $pessoa->getCompanyId(),
                 $pessoa,
                 $r->tipoEndereco,
                 $r->logradouro,
@@ -47,7 +47,7 @@ final class PessoaEnderecoService
                 $currentUserId,
             );
             $this->repo->save($e);
-            $this->audit->log((int) $pessoa->getCompany()->getId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.created', ['enderecoId' => $e->getId(), 'pessoaId' => $pessoa->getId()]);
+            $this->audit->log((int) $pessoa->getCompanyId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.created', ['enderecoId' => $e->getId(), 'pessoaId' => $pessoa->getId()]);
 
             return $e;
         });
@@ -74,7 +74,7 @@ final class PessoaEnderecoService
                 $currentUserId,
             );
             $this->repo->save($endereco);
-            $this->audit->log((int) $endereco->getCompany()->getId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.updated', ['enderecoId' => $endereco->getId()]);
+            $this->audit->log((int) $endereco->getCompanyId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.updated', ['enderecoId' => $endereco->getId()]);
 
             return $endereco;
         });
@@ -104,7 +104,7 @@ final class PessoaEnderecoService
 
         $this->tx->run(function () use ($endereco, $currentUserId): void {
             $this->repo->softDelete($endereco);
-            $this->audit->log((int) $endereco->getCompany()->getId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.deleted', ['enderecoId' => $endereco->getId()]);
+            $this->audit->log((int) $endereco->getCompanyId(), 'pessoa_endereco', 'cadastro.pessoa_endereco.deleted', ['enderecoId' => $endereco->getId()]);
         });
     }
 }

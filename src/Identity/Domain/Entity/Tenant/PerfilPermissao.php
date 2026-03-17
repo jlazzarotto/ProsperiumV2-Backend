@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Identity\Domain\Entity;
+namespace App\Identity\Domain\Entity\Tenant;
 
 use App\Identity\Infrastructure\Persistence\Doctrine\DoctrinePerfilPermissaoRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -21,13 +21,27 @@ class PerfilPermissao
     #[ORM\JoinColumn(name: 'perfil_acesso_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Perfil $perfil;
 
-    #[ORM\ManyToOne(targetEntity: Permissao::class)]
-    #[ORM\JoinColumn(name: 'permissao_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Permissao $permissao;
+    #[ORM\Column(name: 'permissao_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $permissaoId;
 
-    public function __construct(Perfil $perfil, Permissao $permissao)
+    public function __construct(Perfil $perfil, int $permissaoId)
     {
         $this->perfil = $perfil;
-        $this->permissao = $permissao;
+        $this->permissaoId = $permissaoId;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getPerfil(): Perfil
+    {
+        return $this->perfil;
+    }
+
+    public function getPermissaoId(): int
+    {
+        return $this->permissaoId;
     }
 }

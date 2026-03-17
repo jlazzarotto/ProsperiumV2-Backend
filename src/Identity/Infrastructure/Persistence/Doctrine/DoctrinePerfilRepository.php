@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Identity\Infrastructure\Persistence\Doctrine;
 
-use App\Identity\Domain\Entity\Perfil;
+use App\Identity\Domain\Entity\Tenant\Perfil;
 use App\Identity\Domain\Repository\PerfilRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * @extends ServiceEntityRepository<Perfil>
+ * @extends EntityRepository<Perfil>
  */
-final class DoctrinePerfilRepository extends ServiceEntityRepository implements PerfilRepositoryInterface
+final class DoctrinePerfilRepository extends EntityRepository implements PerfilRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Perfil::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(Perfil::class));
     }
 
     public function save(Perfil $perfil): void
@@ -36,7 +39,7 @@ final class DoctrinePerfilRepository extends ServiceEntityRepository implements 
         if ($companyId !== null) {
             $companyProfile = $this->findOneBy([
                 'codigo' => trim($codigo),
-                'company' => $companyId,
+                'companyId' => $companyId,
             ]);
 
             if ($companyProfile !== null) {
@@ -46,7 +49,7 @@ final class DoctrinePerfilRepository extends ServiceEntityRepository implements 
 
         return $this->findOneBy([
             'codigo' => trim($codigo),
-            'company' => null,
+            'companyId' => null,
         ]);
     }
 
@@ -61,9 +64,9 @@ final class DoctrinePerfilRepository extends ServiceEntityRepository implements 
             ->setParameter('codigos', array_values(array_unique($codigos)));
 
         if ($companyId === null) {
-            $qb->andWhere('perfil.company IS NULL');
+            $qb->andWhere('perfil.companyId IS NULL');
         } else {
-            $qb->andWhere('(perfil.company = :companyId OR perfil.company IS NULL)')
+            $qb->andWhere('(perfil.companyId = :companyId OR perfil.companyId IS NULL)')
                 ->setParameter('companyId', $companyId);
         }
 
@@ -80,9 +83,9 @@ final class DoctrinePerfilRepository extends ServiceEntityRepository implements 
             ->addOrderBy('perfil.nome', 'ASC');
 
         if ($companyId === null) {
-            $qb->andWhere('perfil.company IS NULL');
+            $qb->andWhere('perfil.companyId IS NULL');
         } else {
-            $qb->andWhere('(perfil.company = :companyId OR perfil.company IS NULL)')
+            $qb->andWhere('(perfil.companyId = :companyId OR perfil.companyId IS NULL)')
                 ->setParameter('companyId', $companyId);
         }
 

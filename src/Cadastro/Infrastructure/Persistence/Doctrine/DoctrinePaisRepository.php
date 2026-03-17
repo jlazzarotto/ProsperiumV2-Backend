@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Infrastructure\Persistence\Doctrine;
 
-use App\Cadastro\Domain\Entity\Pais;
+use App\Cadastro\Domain\Entity\Referencia\Pais;
 use App\Cadastro\Domain\Repository\PaisRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/** @extends ServiceEntityRepository<Pais> */
-final class DoctrinePaisRepository extends ServiceEntityRepository implements PaisRepositoryInterface
+/** @extends EntityRepository<Pais> */
+final class DoctrinePaisRepository extends EntityRepository implements PaisRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Pais::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.control_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(Pais::class));
     }
 
     public function findByCodigoM49(int $codigoM49): ?Pais

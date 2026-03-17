@@ -28,18 +28,24 @@ final class DoctrineUserEmpresaRepository extends ServiceEntityRepository implem
 
     public function userHasEmpresa(int $userId, int $companyId, int $empresaId): bool
     {
-        return $this->count([
-            'user' => $userId,
-            'company' => $companyId,
-            'empresa' => $empresaId,
-            'status' => 'active',
-        ]) > 0;
+        return (bool) $this->createQueryBuilder('userEmpresa')
+            ->select('COUNT(userEmpresa.id)')
+            ->andWhere('userEmpresa.user = :userId')
+            ->andWhere('userEmpresa.company = :companyId')
+            ->andWhere('userEmpresa.empresaId = :empresaId')
+            ->andWhere('userEmpresa.status = :status')
+            ->setParameter('userId', $userId)
+            ->setParameter('companyId', $companyId)
+            ->setParameter('empresaId', $empresaId)
+            ->setParameter('status', 'active')
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function listEmpresaIdsByUser(int $userId, ?int $companyId = null): array
     {
         $qb = $this->createQueryBuilder('userEmpresa')
-            ->select('IDENTITY(userEmpresa.empresa) AS empresaId')
+            ->select('userEmpresa.empresaId')
             ->andWhere('userEmpresa.user = :userId')
             ->setParameter('userId', $userId);
 

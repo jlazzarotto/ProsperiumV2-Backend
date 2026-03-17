@@ -13,10 +13,10 @@ final class AutomacaoNotificacaoService
     {
         $texto = trim(($titulo->getNumeroDocumento() ?? '') . ' ' . ($titulo->getObservacoes() ?? ''));
         if ($texto === '') { return; }
-        $regras = $this->regraRepo->findActiveMatches((int) $titulo->getCompany()->getId(), (int) $titulo->getEmpresa()->getId(), (int) $titulo->getUnidade()->getId(), $texto);
+        $regras = $this->regraRepo->findActiveMatches((int) $titulo->getCompanyId(), (int) $titulo->getEmpresa()->getId(), (int) $titulo->getUnidade()->getId(), $texto);
         foreach ($regras as $regra) {
             if (!$regra->isAcaoNotificacao()) { continue; }
-            $this->notificacaoRepo->save(new NotificacaoSistema($titulo->getCompany(), $titulo->getEmpresa(), $titulo->getUnidade(), $user, 'automacao_classificacao', 'Regra automática acionada', sprintf('Regra "%s" acionada para o título %d via %s.', $regra->getDescricaoContains(), $titulo->getId(), $origem), ['tituloId' => $titulo->getId(), 'origem' => $origem, 'regraId' => $regra->getId()]));
+            $this->notificacaoRepo->save(new NotificacaoSistema($titulo->getCompanyId(), $titulo->getEmpresa(), $titulo->getUnidade(), $user?->getId() !== null ? (int) $user->getId() : null, 'automacao_classificacao', 'Regra automática acionada', sprintf('Regra "%s" acionada para o título %d via %s.', $regra->getDescricaoContains(), $titulo->getId(), $origem), ['tituloId' => $titulo->getId(), 'origem' => $origem, 'regraId' => $regra->getId()]));
         }
     }
 }

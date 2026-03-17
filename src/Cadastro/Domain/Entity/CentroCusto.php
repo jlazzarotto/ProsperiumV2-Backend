@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Cadastro\Domain\Entity;
 
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineCentroCustoRepository;
-use App\Company\Domain\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrineCentroCustoRepository::class)]
@@ -18,9 +17,8 @@ class CentroCusto
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\ManyToOne(targetEntity: self::class)]
     #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
@@ -41,10 +39,10 @@ class CentroCusto
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, ?self $parent, string $codigo, string $nome, string $status = 'active')
+    public function __construct(int $companyId, ?self $parent, string $codigo, string $nome, string $status = 'active')
     {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->parent = $parent;
         $this->codigo = trim($codigo);
         $this->nome = trim($nome);
@@ -54,7 +52,7 @@ class CentroCusto
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getParent(): ?self { return $this->parent; }
     public function getCodigo(): string { return $this->codigo; }
     public function getNome(): string { return $this->nome; }

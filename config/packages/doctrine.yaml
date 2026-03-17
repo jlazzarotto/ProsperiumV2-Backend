@@ -37,17 +37,29 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Identity/Domain/Entity'
                         prefix: 'App\Identity\Domain\Entity'
                         alias: Identity
+                    CadastroReferencia:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Cadastro/Domain/Entity/Referencia'
+                        prefix: 'App\Cadastro\Domain\Entity\Referencia'
+                        alias: CadastroReferencia
             tenant:
                 connection: tenant
                 naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 report_fields_where_declared: true
                 mappings:
-                    Company:
+                    CompanyTenant:
                         is_bundle: false
                         type: attribute
-                        dir: '%kernel.project_dir%/src/Company/Domain/Entity'
-                        prefix: 'App\Company\Domain\Entity'
-                        alias: Company
+                        dir: '%kernel.project_dir%/src/Company/Domain/Entity/Tenant'
+                        prefix: 'App\Company\Domain\Entity\Tenant'
+                        alias: CompanyTenant
+                    IdentityTenant:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/src/Identity/Domain/Entity/Tenant'
+                        prefix: 'App\Identity\Domain\Entity\Tenant'
+                        alias: IdentityTenant
                     Cadastro:
                         is_bundle: false
                         type: attribute

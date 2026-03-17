@@ -25,11 +25,11 @@ final class BaixaService
         $this->validator->validate($r);
         $authenticatedUser = $this->authenticatedUserProvider->requireUser();
         $parcela=$this->parcelaRepo->findById($parcelaId); if($parcela===null){ throw new ResourceNotFoundException('Parcela não encontrada.'); }
-        if($parcela->getCompany()->getId()!==$r->companyId){ throw new ValidationException(['companyId'=>['Parcela não pertence à company informada.']]); }
-        $conta=$this->contaRepo->findById((int)$r->contaFinanceiraId); if($conta===null||$conta->getCompany()->getId()!==$parcela->getCompany()->getId()||$conta->getEmpresa()->getId()!==$parcela->getEmpresa()->getId()){ throw new ValidationException(['contaFinanceiraId'=>['Conta financeira inválida para a parcela.']]); }
+        if($parcela->getCompanyId()!==$r->companyId){ throw new ValidationException(['companyId'=>['Parcela não pertence à company informada.']]); }
+        $conta=$this->contaRepo->findById((int)$r->contaFinanceiraId); if($conta===null||$conta->getCompanyId()!==$parcela->getCompanyId()||$conta->getEmpresa()->getId()!==$parcela->getEmpresa()->getId()){ throw new ValidationException(['contaFinanceiraId'=>['Conta financeira inválida para a parcela.']]); }
         $tipoOperacao = sprintf('baixa_titulo_%s', $parcela->getTitulo()->getTipo());
         $valor = number_format((float) $r->valor, 2, '.', '');
-        if(!$this->userAlcadaRepository->userHasActiveAlcadaForValue($authenticatedUser->id,(int)$parcela->getCompany()->getId(),(int)$parcela->getEmpresa()->getId(),(int)$parcela->getUnidade()->getId(),$tipoOperacao,$valor)){ throw new ValidationException(['alcada'=>[sprintf('Usuário autenticado não possui alçada para %s no valor %s.',$tipoOperacao,$valor)]]); }
+        if(!$this->userAlcadaRepository->userHasActiveAlcadaForValue($authenticatedUser->id,(int)$parcela->getCompanyId(),(int)$parcela->getEmpresa()->getId(),(int)$parcela->getUnidade()->getId(),$tipoOperacao,$valor)){ throw new ValidationException(['alcada'=>[sprintf('Usuário autenticado não possui alçada para %s no valor %s.',$tipoOperacao,$valor)]]); }
         return $this->tx->run(function() use($parcela,$conta,$r): array {
             $result=$this->baixaFinanceiraService->baixar($parcela,$conta,number_format((float)$r->valor,2,'.',''),new \DateTimeImmutable($r->dataPagamento),$r->observacoes);
             $this->parcelaRepo->save($parcela);
@@ -39,8 +39,8 @@ final class BaixaService
             $status='liquidado';
             foreach($parcelas as $item){ if($item->getStatus()==='parcial'){ $status='parcial'; break; } if($item->getStatus()!=='liquidado'){ $status='aberto'; } }
             $parcela->getTitulo()->marcarStatus($status);
-            $this->audit->log((int)$parcela->getCompany()->getId(),'titulo','financeiro.titulo.baixado',['tituloId'=>$parcela->getTitulo()->getId(),'parcelaId'=>$parcela->getId(),'baixaId'=>$result['baixa']->getId()]);
-            $this->eventBus->publish(new TituloBaixado((int)$parcela->getTitulo()->getId(),(int)$parcela->getId(),(int)$parcela->getCompany()->getId()));
+            $this->audit->log((int)$parcela->getCompanyId(),'titulo','financeiro.titulo.baixado',['tituloId'=>$parcela->getTitulo()->getId(),'parcelaId'=>$parcela->getId(),'baixaId'=>$result['baixa']->getId()]);
+            $this->eventBus->publish(new TituloBaixado((int)$parcela->getTitulo()->getId(),(int)$parcela->getId(),(int)$parcela->getCompanyId()));
             return ['baixa'=>$result['baixa'],'parcela'=>$parcela];
         });
     }

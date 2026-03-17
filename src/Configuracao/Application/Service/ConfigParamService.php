@@ -78,7 +78,7 @@ final class ConfigParamService
 
         return $this->tx->run(function () use ($request, $company, $companyId): ConfigParam {
             $param = new ConfigParam(
-                $company,
+                $companyId,
                 $request->name,
                 $request->value,
                 $request->type,

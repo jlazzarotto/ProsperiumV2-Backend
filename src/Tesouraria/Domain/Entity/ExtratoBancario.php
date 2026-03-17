@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Tesouraria\Domain\Entity;
 
 use App\Cadastro\Domain\Entity\ContaFinanceira;
-use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\Empresa;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Financeiro\Domain\Entity\Baixa;
 use App\Financeiro\Domain\Entity\MovimentoFinanceiro;
 use App\Tesouraria\Infrastructure\Persistence\Doctrine\DoctrineExtratoBancarioRepository;
@@ -22,9 +21,8 @@ class ExtratoBancario
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
     #[ORM\ManyToOne(targetEntity: Empresa::class)]
     #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Empresa $empresa;
@@ -55,10 +53,10 @@ class ExtratoBancario
     #[ORM\Column(name: 'importado_em', type: 'datetime_immutable')]
     private \DateTimeImmutable $importadoEm;
 
-    public function __construct(Company $company, Empresa $empresa, UnidadeNegocio $unidade, ContaFinanceira $contaFinanceira, ?string $codigoExterno, \DateTimeImmutable $dataMovimento, string $valor, string $tipo, string $descricao)
+    public function __construct(int $companyId, Empresa $empresa, UnidadeNegocio $unidade, ContaFinanceira $contaFinanceira, ?string $codigoExterno, \DateTimeImmutable $dataMovimento, string $valor, string $tipo, string $descricao)
     {
-        $this->company = $company; $this->empresa = $empresa; $this->unidade = $unidade; $this->contaFinanceira = $contaFinanceira; $this->codigoExterno = $codigoExterno !== null ? trim($codigoExterno) : null; $this->dataMovimento = $dataMovimento; $this->valor = $valor; $this->tipo = $tipo; $this->descricao = trim($descricao); $this->status = 'pendente'; $this->importadoEm = new \DateTimeImmutable();
+        $this->companyId = $companyId; $this->empresa = $empresa; $this->unidade = $unidade; $this->contaFinanceira = $contaFinanceira; $this->codigoExterno = $codigoExterno !== null ? trim($codigoExterno) : null; $this->dataMovimento = $dataMovimento; $this->valor = $valor; $this->tipo = $tipo; $this->descricao = trim($descricao); $this->status = 'pendente'; $this->importadoEm = new \DateTimeImmutable();
     }
-    public function getId(): ?int { return $this->id; } public function getCompany(): Company { return $this->company; } public function getEmpresa(): Empresa { return $this->empresa; } public function getUnidade(): UnidadeNegocio { return $this->unidade; } public function getContaFinanceira(): ContaFinanceira { return $this->contaFinanceira; } public function getCodigoExterno(): ?string { return $this->codigoExterno; } public function getDataMovimento(): \DateTimeImmutable { return $this->dataMovimento; } public function getValor(): string { return $this->valor; } public function getTipo(): string { return $this->tipo; } public function getDescricao(): string { return $this->descricao; } public function getStatus(): string { return $this->status; } public function getMovimentoFinanceiro(): ?MovimentoFinanceiro { return $this->movimentoFinanceiro; } public function getBaixa(): ?Baixa { return $this->baixa; }
+    public function getId(): ?int { return $this->id; } public function getCompanyId(): int { return $this->companyId; } public function getEmpresa(): Empresa { return $this->empresa; } public function getUnidade(): UnidadeNegocio { return $this->unidade; } public function getContaFinanceira(): ContaFinanceira { return $this->contaFinanceira; } public function getCodigoExterno(): ?string { return $this->codigoExterno; } public function getDataMovimento(): \DateTimeImmutable { return $this->dataMovimento; } public function getValor(): string { return $this->valor; } public function getTipo(): string { return $this->tipo; } public function getDescricao(): string { return $this->descricao; } public function getStatus(): string { return $this->status; } public function getMovimentoFinanceiro(): ?MovimentoFinanceiro { return $this->movimentoFinanceiro; } public function getBaixa(): ?Baixa { return $this->baixa; }
     public function conciliar(?MovimentoFinanceiro $movimento, ?Baixa $baixa): void { $this->movimentoFinanceiro = $movimento; $this->baixa = $baixa; $this->status = 'conciliado'; }
 }

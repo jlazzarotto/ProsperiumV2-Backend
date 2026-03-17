@@ -6,9 +6,8 @@ namespace App\Financeiro\Domain\Entity;
 
 use App\Cadastro\Domain\Entity\ContaFinanceira;
 use App\Cadastro\Domain\Entity\Pessoa;
-use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\Empresa;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Financeiro\Infrastructure\Persistence\Doctrine\DoctrineTituloRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,9 +20,8 @@ class Titulo
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
     #[ORM\ManyToOne(targetEntity: Empresa::class)]
     #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Empresa $empresa;
@@ -53,10 +51,10 @@ class Titulo
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, Empresa $empresa, UnidadeNegocio $unidade, Pessoa $pessoa, string $tipo, ?string $numeroDocumento, string $valorTotal, \DateTimeImmutable $dataEmissao, ?string $observacoes = null, ?ContaFinanceira $contaFinanceira = null)
+    public function __construct(int $companyId, Empresa $empresa, UnidadeNegocio $unidade, Pessoa $pessoa, string $tipo, ?string $numeroDocumento, string $valorTotal, \DateTimeImmutable $dataEmissao, ?string $observacoes = null, ?ContaFinanceira $contaFinanceira = null)
     {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->empresa = $empresa;
         $this->unidade = $unidade;
         $this->pessoa = $pessoa;
@@ -72,7 +70,7 @@ class Titulo
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getEmpresa(): Empresa { return $this->empresa; }
     public function getUnidade(): UnidadeNegocio { return $this->unidade; }
     public function getPessoa(): Pessoa { return $this->pessoa; }

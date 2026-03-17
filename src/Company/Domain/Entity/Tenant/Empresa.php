@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Company\Domain\Entity;
+namespace App\Company\Domain\Entity\Tenant;
 
 use App\Company\Infrastructure\Persistence\Doctrine\DoctrineEmpresaRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -17,9 +17,8 @@ class Empresa
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\Column(name: 'razao_social', length: 255)]
     private string $razaoSocial;
@@ -76,7 +75,7 @@ class Empresa
     private ?\DateTimeImmutable $deletedAt = null;
 
     public function __construct(
-        Company $company,
+        int $companyId,
         string $razaoSocial,
         ?string $nomeFantasia,
         ?string $cnpj,
@@ -94,7 +93,7 @@ class Empresa
         ?string $bairro = null,
     ) {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->razaoSocial = trim($razaoSocial);
         $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
         $this->apelido = $apelido !== null ? trim($apelido) : null;
@@ -119,9 +118,9 @@ class Empresa
         return $this->id;
     }
 
-    public function getCompany(): Company
+    public function getCompanyId(): int
     {
-        return $this->company;
+        return $this->companyId;
     }
 
     public function getRazaoSocial(): string
@@ -215,7 +214,7 @@ class Empresa
     }
 
     public function update(
-        Company $company,
+        int $companyId,
         string $razaoSocial,
         ?string $nomeFantasia,
         ?string $cnpj,
@@ -232,7 +231,7 @@ class Empresa
         ?string $complemento = null,
         ?string $bairro = null,
     ): void {
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->razaoSocial = trim($razaoSocial);
         $this->nomeFantasia = $nomeFantasia !== null ? trim($nomeFantasia) : null;
         $this->apelido = $apelido !== null ? trim($apelido) : null;

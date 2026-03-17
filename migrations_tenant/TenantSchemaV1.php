@@ -12,7 +12,9 @@ use Doctrine\DBAL\Connection;
  * Executado via comando app:tenant:provision contra cada banco tenant.
  *
  * Diferenças em relação ao control plane:
- * - companies é uma tabela espelhada/projeção (sem FK para tenant_instances)
+ * - companies NÃO existe neste banco; company_id é coluna informacional sem FK
+ * - paises, ufs, municipios vivem no control plane (não replicados aqui)
+ * - perfis_acesso e perfil_acesso_permissoes vivem aqui (por tenant)
  * - FKs para users são removidas (users vivem no control plane)
  * - Colunas user_id permanecem como referência informacional
  */
@@ -35,19 +37,7 @@ final class TenantSchemaV1
     {
         return [
             // ============================
-            // 1. companies (projeção do control plane)
-            // ============================
-            "CREATE TABLE IF NOT EXISTS companies (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                nome VARCHAR(255) NOT NULL,
-                status VARCHAR(30) NOT NULL DEFAULT 'active',
-                created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                UNIQUE KEY uk_companies_nome (nome)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
-
-            // ============================
-            // 2. empresas
+            // 1. empresas
             // ============================
             "CREATE TABLE IF NOT EXISTS empresas (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -71,8 +61,7 @@ final class TenantSchemaV1
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 deleted_at DATETIME DEFAULT NULL,
                 UNIQUE KEY uk_empresas_company_cnpj (company_id, cnpj),
-                INDEX idx_empresas_company (company_id),
-                CONSTRAINT fk_empresas_company FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                INDEX idx_empresas_company (company_id)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -87,8 +76,7 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 UNIQUE KEY uk_unidades_negocio_company_nome (company_id, nome),
-                UNIQUE KEY uk_unidades_negocio_company_abrev (company_id, abreviatura),
-                CONSTRAINT fk_unidades_negocio_company FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                UNIQUE KEY uk_unidades_negocio_company_abrev (company_id, abreviatura)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -112,10 +100,10 @@ final class TenantSchemaV1
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 deleted_at DATETIME DEFAULT NULL,
                 UNIQUE KEY uk_pessoas_company_documento (company_id, documento),
+                UNIQUE KEY uk_pessoas_company_email (company_id, email_principal),
                 INDEX idx_pessoas_company (company_id, status),
                 INDEX idx_pessoas_company_nome (company_id, nome_razao),
-                INDEX idx_pessoas_classificacao (company_id, classificacao),
-                CONSTRAINT FK_PESSOA_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                INDEX idx_pessoas_classificacao (company_id, classificacao)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -141,7 +129,6 @@ final class TenantSchemaV1
                 updated_by BIGINT UNSIGNED DEFAULT NULL,
                 deleted_at DATETIME DEFAULT NULL,
                 INDEX idx_pessoa_enderecos_lookup (company_id, pessoa_id),
-                CONSTRAINT FK_PEND_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PEND_PESSOA FOREIGN KEY (pessoa_id) REFERENCES pessoas (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -163,7 +150,6 @@ final class TenantSchemaV1
                 updated_by BIGINT UNSIGNED DEFAULT NULL,
                 deleted_at DATETIME DEFAULT NULL,
                 INDEX idx_pessoa_contatos_lookup (company_id, pessoa_id),
-                CONSTRAINT FK_PCONT_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PCONT_PESSOA FOREIGN KEY (pessoa_id) REFERENCES pessoas (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -192,87 +178,7 @@ final class TenantSchemaV1
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
-            // 8. paises
-            // ============================
-            "CREATE TABLE IF NOT EXISTS paises (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                codigo_m49 INT NOT NULL,
-                iso_alpha2 VARCHAR(2) NOT NULL,
-                iso_alpha3 VARCHAR(3) NOT NULL,
-                nome VARCHAR(180) NOT NULL,
-                regiao_codigo_m49 INT DEFAULT NULL,
-                regiao_nome VARCHAR(120) DEFAULT NULL,
-                sub_regiao_codigo_m49 INT DEFAULT NULL,
-                sub_regiao_nome VARCHAR(160) DEFAULT NULL,
-                regiao_intermediaria_codigo_m49 INT DEFAULT NULL,
-                regiao_intermediaria_nome VARCHAR(160) DEFAULT NULL,
-                status VARCHAR(20) NOT NULL DEFAULT 'active',
-                hash_payload VARCHAR(64) NOT NULL,
-                origem_dados VARCHAR(30) NOT NULL,
-                sincronizado_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                UNIQUE KEY uk_paises_codigo_m49 (codigo_m49),
-                UNIQUE KEY uk_paises_iso_alpha2 (iso_alpha2),
-                UNIQUE KEY uk_paises_iso_alpha3 (iso_alpha3),
-                INDEX idx_paises_status (status)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
-
-            // ============================
-            // 9. ufs
-            // ============================
-            "CREATE TABLE IF NOT EXISTS ufs (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                codigo_ibge INT NOT NULL,
-                sigla VARCHAR(2) NOT NULL,
-                nome VARCHAR(60) NOT NULL,
-                regiao_codigo_ibge INT NOT NULL,
-                regiao_sigla VARCHAR(2) NOT NULL,
-                regiao_nome VARCHAR(40) NOT NULL,
-                status VARCHAR(20) NOT NULL DEFAULT 'active',
-                hash_payload VARCHAR(64) NOT NULL,
-                origem_dados VARCHAR(30) NOT NULL,
-                sincronizado_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                UNIQUE KEY uk_ufs_codigo_ibge (codigo_ibge),
-                UNIQUE KEY uk_ufs_sigla (sigla),
-                INDEX idx_ufs_status (status)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
-
-            // ============================
-            // 10. municipios
-            // ============================
-            "CREATE TABLE IF NOT EXISTS municipios (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                codigo_ibge BIGINT UNSIGNED NOT NULL,
-                nome VARCHAR(180) NOT NULL,
-                uf_codigo_ibge INT NOT NULL,
-                uf_sigla VARCHAR(2) NOT NULL,
-                uf_nome VARCHAR(60) NOT NULL,
-                regiao_codigo_ibge INT NOT NULL,
-                regiao_sigla VARCHAR(2) NOT NULL,
-                regiao_nome VARCHAR(40) NOT NULL,
-                regiao_intermediaria_codigo_ibge INT DEFAULT NULL,
-                regiao_intermediaria_nome VARCHAR(120) DEFAULT NULL,
-                regiao_imediata_codigo_ibge INT DEFAULT NULL,
-                regiao_imediata_nome VARCHAR(120) DEFAULT NULL,
-                microrregiao_codigo_ibge INT DEFAULT NULL,
-                microrregiao_nome VARCHAR(120) DEFAULT NULL,
-                mesorregiao_codigo_ibge INT DEFAULT NULL,
-                mesorregiao_nome VARCHAR(120) DEFAULT NULL,
-                status VARCHAR(20) NOT NULL DEFAULT 'active',
-                hash_payload VARCHAR(64) NOT NULL,
-                origem_dados VARCHAR(30) NOT NULL,
-                sincronizado_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                UNIQUE KEY uk_municipios_codigo_ibge (codigo_ibge),
-                INDEX idx_municipios_uf_status (uf_sigla, status)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
-
-            // ============================
-            // 11. categorias_financeiras
+            // 8. categorias_financeiras
             // ============================
             "CREATE TABLE IF NOT EXISTS categorias_financeiras (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -285,7 +191,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_categorias_company (company_id, status),
-                CONSTRAINT FK_CAT_FIN_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CAT_FIN_PARENT FOREIGN KEY (parent_id) REFERENCES categorias_financeiras (id) ON DELETE SET NULL
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -302,7 +207,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_centros_custo_company (company_id, status),
-                CONSTRAINT FK_CC_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CC_PARENT FOREIGN KEY (parent_id) REFERENCES centros_custo (id) ON DELETE SET NULL
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -332,7 +236,6 @@ final class TenantSchemaV1
                 INDEX idx_contas_financeiras_lookup (company_id, empresa_id, unidade_id, status),
                 INDEX idx_contas_financeiras_banco (banco_id),
                 INDEX idx_contas_financeiras_titular (titular_pessoa_id),
-                CONSTRAINT FK_CONTA_FIN_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONTA_FIN_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONTA_FIN_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL,
                 CONSTRAINT FK_CONTA_FIN_BANCO FOREIGN KEY (banco_id) REFERENCES bancos (id) ON DELETE SET NULL,
@@ -351,8 +254,7 @@ final class TenantSchemaV1
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                INDEX idx_formas_pagamento_company (company_id, status),
-                CONSTRAINT FK_FORMA_PGTO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                INDEX idx_formas_pagamento_company (company_id, status)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -374,7 +276,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_titulos_lookup (company_id, empresa_id, unidade_id, tipo, status),
-                CONSTRAINT FK_TIT_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TIT_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TIT_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TIT_PESSOA FOREIGN KEY (pessoa_id) REFERENCES pessoas (id) ON DELETE CASCADE,
@@ -397,7 +298,6 @@ final class TenantSchemaV1
                 status VARCHAR(30) NOT NULL DEFAULT 'aberto',
                 INDEX idx_titulos_parcelas_lookup (company_id, empresa_id, unidade_id, vencimento, status),
                 CONSTRAINT FK_TITPAR_TIT FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE CASCADE,
-                CONSTRAINT FK_TITPAR_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TITPAR_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TITPAR_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -416,7 +316,6 @@ final class TenantSchemaV1
                 data_pagamento DATE NOT NULL COMMENT '(DC2Type:date_immutable)',
                 observacoes LONGTEXT DEFAULT NULL,
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_BAIXA_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BAIXA_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BAIXA_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BAIXA_PARCELA FOREIGN KEY (titulo_parcela_id) REFERENCES titulos_parcelas (id) ON DELETE CASCADE,
@@ -439,7 +338,6 @@ final class TenantSchemaV1
                 data_movimento DATE NOT NULL COMMENT '(DC2Type:date_immutable)',
                 historico LONGTEXT DEFAULT NULL,
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_MOV_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_MOV_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_MOV_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_MOV_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE,
@@ -458,7 +356,6 @@ final class TenantSchemaV1
                 file_path VARCHAR(255) NOT NULL,
                 mime_type VARCHAR(100) DEFAULT NULL,
                 uploaded_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_ANEXO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_ANEXO_TITULO FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -481,7 +378,6 @@ final class TenantSchemaV1
                 baixa_id BIGINT UNSIGNED DEFAULT NULL,
                 importado_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_extratos_bancarios_lookup (company_id, empresa_id, unidade_id, conta_financeira_id, data_movimento),
-                CONSTRAINT FK_EXT_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_EXT_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_EXT_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_EXT_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE,
@@ -503,7 +399,6 @@ final class TenantSchemaV1
                 modo VARCHAR(20) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'confirmada',
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_CONC_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONC_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONC_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONC_EXT FOREIGN KEY (extrato_bancario_id) REFERENCES extratos_bancarios (id) ON DELETE CASCADE,
@@ -524,7 +419,6 @@ final class TenantSchemaV1
                 tipo_movimento_sugerido VARCHAR(20) NOT NULL,
                 aplicacao VARCHAR(20) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
-                CONSTRAINT FK_REGRAS_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_REGRAS_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE SET NULL,
                 CONSTRAINT FK_REGRAS_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL,
                 CONSTRAINT FK_REGRAS_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE SET NULL
@@ -543,7 +437,6 @@ final class TenantSchemaV1
                 integration_type VARCHAR(50) NOT NULL,
                 config_json JSON NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
-                CONSTRAINT FK_INTB_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_INTB_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE SET NULL,
                 CONSTRAINT FK_INTB_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL,
                 CONSTRAINT FK_INTB_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE
@@ -561,7 +454,6 @@ final class TenantSchemaV1
                 referencia VARCHAR(100) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'rascunho',
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_BPG_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BPG_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BPG_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BPG_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE
@@ -592,7 +484,6 @@ final class TenantSchemaV1
                 referencia VARCHAR(100) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'rascunho',
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                CONSTRAINT FK_BRC_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRC_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRC_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRC_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE
@@ -626,7 +517,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 UNIQUE KEY uk_boletos_remessa_codigo (company_id, codigo_remessa),
                 KEY idx_boletos_remessa_lookup (company_id, empresa_id, unidade_id, status),
-                CONSTRAINT FK_BREM_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BREM_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BREM_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BREM_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE
@@ -667,7 +557,6 @@ final class TenantSchemaV1
                 linha_original LONGTEXT DEFAULT NULL,
                 importado_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_boletos_retorno_lookup (company_id, empresa_id, unidade_id, nosso_numero),
-                CONSTRAINT FK_BRET_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRET_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRET_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_BRET_ITEM FOREIGN KEY (boleto_remessa_item_id) REFERENCES boletos_remessa_itens (id) ON DELETE SET NULL
@@ -694,7 +583,6 @@ final class TenantSchemaV1
                 copia_cola LONGTEXT DEFAULT NULL,
                 UNIQUE KEY uk_pix_cobrancas_txid (txid),
                 KEY idx_pix_cobrancas_lookup (company_id, empresa_id, unidade_id, status),
-                CONSTRAINT FK_PIXC_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXC_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXC_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXC_PARCELA FOREIGN KEY (titulo_parcela_id) REFERENCES titulos_parcelas (id) ON DELETE CASCADE,
@@ -716,7 +604,6 @@ final class TenantSchemaV1
                 payload_json JSON NOT NULL,
                 recebido_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 UNIQUE KEY uk_pix_recebimentos_e2e (end_to_end_id),
-                CONSTRAINT FK_PIXR_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXR_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXR_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXR_COBRANCA FOREIGN KEY (pix_cobranca_id) REFERENCES pix_cobrancas (id) ON DELETE CASCADE
@@ -735,7 +622,6 @@ final class TenantSchemaV1
                 payload_json JSON NOT NULL,
                 recebido_em DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_pix_eventos_webhook_lookup (company_id, tipo_evento, identificador_externo),
-                CONSTRAINT FK_PIXW_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_PIXW_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE SET NULL,
                 CONSTRAINT FK_PIXW_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -758,7 +644,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_tarefas_bpo_lookup (company_id, empresa_id, unidade_id, status, prioridade),
                 INDEX idx_tarefas_bpo_user (responsavel_user_id),
-                CONSTRAINT FK_TBPO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TBPO_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TBPO_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TBPO_TITULO FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE SET NULL
@@ -791,7 +676,6 @@ final class TenantSchemaV1
                 comentario LONGTEXT NOT NULL,
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_titulos_comentarios_user (user_id),
-                CONSTRAINT FK_TCOM_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TCOM_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TCOM_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_TCOM_TITULO FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE CASCADE
@@ -813,7 +697,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_aprovacoes_titulos_lookup (company_id, empresa_id, unidade_id, status),
                 INDEX idx_aprovacoes_titulos_user (solicitante_user_id),
-                CONSTRAINT FK_APT_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_APT_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_APT_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_APT_TITULO FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE CASCADE
@@ -849,7 +732,6 @@ final class TenantSchemaV1
                 acao_notificacao TINYINT(1) NOT NULL DEFAULT 1,
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
                 KEY idx_regras_auto_classificacao_lookup (company_id, empresa_id, unidade_id, status),
-                CONSTRAINT FK_RAC_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_RAC_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE SET NULL,
                 CONSTRAINT FK_RAC_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL,
                 CONSTRAINT FK_RAC_CATEGORIA FOREIGN KEY (categoria_financeira_id) REFERENCES categorias_financeiras (id) ON DELETE SET NULL,
@@ -873,7 +755,6 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_notificacoes_sistema_lookup (company_id, empresa_id, unidade_id, status),
                 INDEX idx_notificacoes_sistema_user (user_id),
-                CONSTRAINT FK_NS_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_NS_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE SET NULL,
                 CONSTRAINT FK_NS_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE SET NULL
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -891,7 +772,6 @@ final class TenantSchemaV1
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
                 UNIQUE KEY uk_contas_contabeis_company_codigo (company_id, codigo),
                 KEY idx_contas_contabeis_lookup (company_id, tipo, status),
-                CONSTRAINT FK_CONTA_CONTABIL_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_CONTA_CONTABIL_PARENT FOREIGN KEY (parent_id) REFERENCES contas_contabeis (id) ON DELETE SET NULL
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
@@ -909,7 +789,6 @@ final class TenantSchemaV1
                 status VARCHAR(30) NOT NULL DEFAULT 'posted',
                 created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
                 KEY idx_lancamentos_contabeis_lookup (company_id, empresa_id, unidade_id, data_lancamento, status),
-                CONSTRAINT FK_LANC_CONTABIL_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_LANC_CONTABIL_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_LANC_CONTABIL_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_LANC_CONTABIL_TITULO FOREIGN KEY (titulo_id) REFERENCES titulos (id) ON DELETE SET NULL
@@ -939,8 +818,7 @@ final class TenantSchemaV1
                 ordem INT NOT NULL,
                 tipo_demonstracao VARCHAR(30) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'active',
-                KEY idx_dre_grupos_lookup (company_id, ordem, status),
-                CONSTRAINT FK_DRE_GRUPO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                KEY idx_dre_grupos_lookup (company_id, ordem, status)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -951,7 +829,6 @@ final class TenantSchemaV1
                 company_id BIGINT UNSIGNED NOT NULL,
                 dre_grupo_id BIGINT UNSIGNED NOT NULL,
                 categoria_financeira_id BIGINT UNSIGNED NOT NULL,
-                CONSTRAINT FK_DRE_MAP_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_DRE_MAP_GRUPO FOREIGN KEY (dre_grupo_id) REFERENCES dre_grupos (id) ON DELETE CASCADE,
                 CONSTRAINT FK_DRE_MAP_CATEGORIA FOREIGN KEY (categoria_financeira_id) REFERENCES categorias_financeiras (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -968,7 +845,6 @@ final class TenantSchemaV1
                 data_saldo DATE NOT NULL COMMENT '(DC2Type:date_immutable)',
                 saldo DECIMAL(18,2) NOT NULL,
                 UNIQUE KEY uk_cfsd_contexto_data (company_id, empresa_id, unidade_id, conta_financeira_id, data_saldo),
-                CONSTRAINT FK_SALDO_DIARIO_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_SALDO_DIARIO_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_SALDO_DIARIO_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE,
                 CONSTRAINT FK_SALDO_DIARIO_CONTA FOREIGN KEY (conta_financeira_id) REFERENCES contas_financeiras (id) ON DELETE CASCADE
@@ -988,7 +864,6 @@ final class TenantSchemaV1
                 valor DECIMAL(18,4) NOT NULL,
                 metadata_json JSON NOT NULL,
                 KEY idx_indicadores_financeiros_lookup (company_id, empresa_id, unidade_id, codigo, data_referencia),
-                CONSTRAINT FK_IND_FIN_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_IND_FIN_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_IND_FIN_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -1007,7 +882,6 @@ final class TenantSchemaV1
                 saidas_periodo DECIMAL(18,2) NOT NULL,
                 saldo_final DECIMAL(18,2) NOT NULL,
                 UNIQUE KEY uk_snapshots_fluxo_caixa_contexto_data (company_id, empresa_id, unidade_id, data_referencia),
-                CONSTRAINT FK_SNAPSHOT_CAIXA_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE,
                 CONSTRAINT FK_SNAPSHOT_CAIXA_EMPRESA FOREIGN KEY (empresa_id) REFERENCES empresas (id) ON DELETE CASCADE,
                 CONSTRAINT FK_SNAPSHOT_CAIXA_UNIDADE FOREIGN KEY (unidade_id) REFERENCES unidades_negocio (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
@@ -1045,8 +919,31 @@ final class TenantSchemaV1
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '(DC2Type:datetime_immutable)',
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '(DC2Type:datetime_immutable)',
                 INDEX idx_config_params_company_status (company_id, status),
-                UNIQUE KEY uk_config_params_company_name (company_id, name),
-                CONSTRAINT FK_CONFIG_PARAMS_COMPANY FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
+                UNIQUE KEY uk_config_params_company_name (company_id, name)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
+
+            // ============================
+            // 51. perfis_acesso
+            // ============================
+            "CREATE TABLE IF NOT EXISTS perfis_acesso (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                company_id BIGINT UNSIGNED DEFAULT NULL,
+                codigo VARCHAR(100) NOT NULL,
+                nome VARCHAR(255) NOT NULL,
+                tipo VARCHAR(20) NOT NULL DEFAULT 'custom',
+                status VARCHAR(30) NOT NULL DEFAULT 'active',
+                UNIQUE KEY uk_perfis_acesso_company_codigo (company_id, codigo)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
+
+            // ============================
+            // 52. perfil_acesso_permissoes
+            // ============================
+            "CREATE TABLE IF NOT EXISTS perfil_acesso_permissoes (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                perfil_acesso_id BIGINT UNSIGNED NOT NULL,
+                permissao_id BIGINT UNSIGNED NOT NULL,
+                UNIQUE KEY uk_pap (perfil_acesso_id, permissao_id),
+                CONSTRAINT fk_pap_perfil FOREIGN KEY (perfil_acesso_id) REFERENCES perfis_acesso (id) ON DELETE CASCADE
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB",
 
             // ============================
@@ -1107,16 +1004,14 @@ final class TenantSchemaV1
             'DROP TABLE IF EXISTS contas_financeiras',
             'DROP TABLE IF EXISTS centros_custo',
             'DROP TABLE IF EXISTS categorias_financeiras',
-            'DROP TABLE IF EXISTS municipios',
-            'DROP TABLE IF EXISTS ufs',
-            'DROP TABLE IF EXISTS paises',
             'DROP TABLE IF EXISTS bancos',
             'DROP TABLE IF EXISTS pessoa_contatos',
             'DROP TABLE IF EXISTS pessoa_enderecos',
             'DROP TABLE IF EXISTS pessoas',
             'DROP TABLE IF EXISTS unidades_negocio',
             'DROP TABLE IF EXISTS empresas',
-            'DROP TABLE IF EXISTS companies',
+            'DROP TABLE IF EXISTS perfil_acesso_permissoes',
+            'DROP TABLE IF EXISTS perfis_acesso',
         ];
     }
 }

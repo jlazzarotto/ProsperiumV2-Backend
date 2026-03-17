@@ -17,7 +17,7 @@ final class ContaContabilService
         $this->validator->validate($r);
         $company=$this->companyRepo->findById((int)$r->companyId); if($company===null){ throw new ResourceNotFoundException('Company não encontrada.'); }
         $parent=$r->parentId!==null?$this->repo->findById($r->parentId):null;
-        if($r->parentId!==null && ($parent===null || $parent->getCompany()->getId()!==$company->getId())){ throw new ValidationException(['parentId'=>['Conta contábil pai inválida para a company informada.']]); }
+        if($r->parentId!==null && ($parent===null || $parent->getCompanyId()!==$company->getId())){ throw new ValidationException(['parentId'=>['Conta contábil pai inválida para a company informada.']]); }
         $conta=new ContaContabil($company,$parent,$r->codigo,$r->nome,$r->tipo,$r->status);
         $this->repo->save($conta);
         $this->audit->log((int)$company->getId(),'conta_contabil','contabil.conta_contabil.criada',['contaContabilId'=>$conta->getId()]);

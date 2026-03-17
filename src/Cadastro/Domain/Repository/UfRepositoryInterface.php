@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Domain\Repository;
 
-use App\Cadastro\Domain\Entity\Uf;
+use App\Cadastro\Domain\Entity\Referencia\Uf;
 
 interface UfRepositoryInterface
 {

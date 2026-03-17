@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Domain\Repository;
 
-use App\Cadastro\Domain\Entity\Pais;
+use App\Cadastro\Domain\Entity\Referencia\Pais;
 
 interface PaisRepositoryInterface
 {

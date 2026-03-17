@@ -31,7 +31,7 @@ final class BaixaFinanceiraService
         $parcela->baixar(number_format($valorFloat, 2, '.', ''));
 
         $baixa = new Baixa(
-            $parcela->getCompany(),
+            $parcela->getCompanyId(),
             $parcela->getEmpresa(),
             $parcela->getUnidade(),
             $parcela,
@@ -42,7 +42,7 @@ final class BaixaFinanceiraService
         );
 
         $movimento = new MovimentoFinanceiro(
-            $parcela->getCompany(),
+            $parcela->getCompanyId(),
             $parcela->getEmpresa(),
             $parcela->getUnidade(),
             $contaFinanceira,

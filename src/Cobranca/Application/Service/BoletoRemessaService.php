@@ -28,7 +28,7 @@ final class BoletoRemessaService
         $this->validator->validate($r);
         $company = $this->companyRepo->findById((int) $r->companyId); $empresa = $this->empresaRepo->findById((int) $r->empresaId); $unidade = $this->unidadeRepo->findById((int) $r->unidadeId); $conta = $this->contaRepo->findById((int) $r->contaFinanceiraId);
         if (!$company || !$empresa || !$unidade || !$conta) { throw new ResourceNotFoundException('Contexto de cobrança inválido.'); }
-        if ($empresa->getCompany()->getId() !== $company->getId() || $unidade->getCompany()->getId() !== $company->getId() || $conta->getCompany()->getId() !== $company->getId() || $conta->getEmpresa()->getId() !== $empresa->getId()) { throw new ValidationException(['contexto' => ['Company, empresa, unidade e conta financeira devem ser compatíveis.']]); }
+        if ($empresa->getCompanyId() !== $company->getId() || $unidade->getCompanyId() !== $company->getId() || $conta->getCompanyId() !== $company->getId() || $conta->getEmpresa()->getId() !== $empresa->getId()) { throw new ValidationException(['contexto' => ['Company, empresa, unidade e conta financeira devem ser compatíveis.']]); }
         $parcelas = array_map(fn (int $id): TituloParcela => $this->resolveParcela($id, (int) $company->getId(), (int) $empresa->getId(), (int) $unidade->getId()), $r->parcelaIds);
         return $this->tx->run(function () use ($company, $empresa, $unidade, $conta, $parcelas, $r): array {
             $codigoRemessa = sprintf('BRM-%d-%s', (int) $company->getId(), date('YmdHis'));
@@ -49,7 +49,7 @@ final class BoletoRemessaService
     {
         $parcela = $this->parcelaRepo->findById($id);
         if ($parcela === null) { throw new ResourceNotFoundException(sprintf('Parcela %d não encontrada.', $id)); }
-        if ($parcela->getCompany()->getId() !== $companyId || $parcela->getEmpresa()->getId() !== $empresaId || $parcela->getUnidade()->getId() !== $unidadeId) { throw new ValidationException(['parcelaIds' => [sprintf('Parcela %d fora do contexto informado.', $id)]]); }
+        if ($parcela->getCompanyId() !== $companyId || $parcela->getEmpresa()->getId() !== $empresaId || $parcela->getUnidade()->getId() !== $unidadeId) { throw new ValidationException(['parcelaIds' => [sprintf('Parcela %d fora do contexto informado.', $id)]]); }
         if ($parcela->getTitulo()->getTipo() !== 'receber') { throw new ValidationException(['parcelaIds' => [sprintf('Parcela %d não pertence a um título a receber.', $id)]]); }
         if ((float) $parcela->getValorAberto() <= 0.0) { throw new ValidationException(['parcelaIds' => [sprintf('Parcela %d não possui saldo aberto.', $id)]]); }
         return $parcela;

@@ -12,7 +12,7 @@ final class ConfigParamResponse
     {
         return [
             'id' => $p->getId(),
-            'companyId' => $p->getCompany()->getId(),
+            'companyId' => $p->getCompanyId(),
             'name' => $p->getName(),
             'type' => $p->getType() ?? '',
             'value' => $p->getValue(),

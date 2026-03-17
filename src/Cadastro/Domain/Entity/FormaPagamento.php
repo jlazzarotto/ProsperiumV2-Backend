@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Cadastro\Domain\Entity;
 
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrineFormaPagamentoRepository;
-use App\Company\Domain\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrineFormaPagamentoRepository::class)]
@@ -18,9 +17,8 @@ class FormaPagamento
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\Column(length: 50)]
     private string $codigo;
@@ -40,10 +38,10 @@ class FormaPagamento
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, string $codigo, string $nome, string $tipo, string $status = 'active')
+    public function __construct(int $companyId, string $codigo, string $nome, string $tipo, string $status = 'active')
     {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->codigo = trim($codigo);
         $this->nome = trim($nome);
         $this->tipo = $tipo;
@@ -53,7 +51,7 @@ class FormaPagamento
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getCodigo(): string { return $this->codigo; }
     public function getNome(): string { return $this->nome; }
     public function getTipo(): string { return $this->tipo; }

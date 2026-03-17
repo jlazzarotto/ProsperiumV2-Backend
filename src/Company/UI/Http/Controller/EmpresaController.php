@@ -75,7 +75,7 @@ final class EmpresaController extends AbstractController
             }
 
             if ($companyId !== null) {
-                $items = array_values(array_filter($items, static fn ($empresa): bool => (int) $empresa->getCompany()->getId() === $companyId));
+                $items = array_values(array_filter($items, static fn ($empresa): bool => (int) $empresa->getCompanyId() === $companyId));
             }
 
             return $this->responseFactory->success([
@@ -100,7 +100,7 @@ final class EmpresaController extends AbstractController
         $empresa = $this->empresaService->getById($id);
         $user = $this->requireUser();
 
-        if (!$user->isRoot() && !$this->userCompanyRepository->userHasCompany((int) $user->getId(), (int) $empresa->getCompany()->getId())) {
+        if (!$user->isRoot() && !$this->userCompanyRepository->userHasCompany((int) $user->getId(), (int) $empresa->getCompanyId())) {
             throw $this->createAccessDeniedException('Usuário não possui acesso à company da empresa informada.');
         }
 

@@ -25,13 +25,13 @@ final class PixWebhookService
         $this->validator->validate($r);
         $company = $this->companyRepo->findById((int) $r->companyId); if ($company === null) { throw new ResourceNotFoundException('Company não encontrada.'); }
         $empresa = $r->empresaId !== null ? $this->empresaRepo->findById($r->empresaId) : null; $unidade = $r->unidadeId !== null ? $this->unidadeRepo->findById($r->unidadeId) : null;
-        if (($empresa !== null && $empresa->getCompany()->getId() !== $company->getId()) || ($unidade !== null && $unidade->getCompany()->getId() !== $company->getId())) { throw new ValidationException(['contexto' => ['Empresa/unidade do webhook devem pertencer à mesma company.']]); }
+        if (($empresa !== null && $empresa->getCompanyId() !== $company->getId()) || ($unidade !== null && $unidade->getCompanyId() !== $company->getId())) { throw new ValidationException(['contexto' => ['Empresa/unidade do webhook devem pertencer à mesma company.']]); }
         return $this->tx->run(function () use ($r, $company, $empresa, $unidade): PixEventoWebhook {
             $evento = new PixEventoWebhook($company, $empresa, $unidade, $r->tipoEvento, $r->endToEndId ?? $r->txid, $r->payload, $r->recebidoEm !== null ? new \DateTimeImmutable($r->recebidoEm) : null);
             $this->eventoRepo->save($evento);
             $pix = $r->pixCobrancaId !== null ? $this->pixRepo->findById($r->pixCobrancaId) : ($r->txid !== null ? $this->pixRepo->findByTxid($r->txid) : null);
             if ($pix !== null) {
-                if ($pix->getCompany()->getId() !== $company->getId()) { throw new ValidationException(['pixCobrancaId' => ['Cobrança PIX não pertence à company informada.']]); }
+                if ($pix->getCompanyId() !== $company->getId()) { throw new ValidationException(['pixCobrancaId' => ['Cobrança PIX não pertence à company informada.']]); }
                 if (in_array(strtolower($r->tipoEvento), ['pix.recebido', 'pix_received', 'recebido'], true)) {
                     $endToEndId = trim((string) ($r->endToEndId ?? ('E2E-' . $pix->getTxid())));
                     if ($this->recebimentoRepo->findByEndToEndId($endToEndId) === null) {

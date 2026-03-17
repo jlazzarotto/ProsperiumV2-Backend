@@ -63,7 +63,7 @@ final class UnidadeNegocioController extends AbstractController
             }
 
             if ($companyId !== null) {
-                $items = array_values(array_filter($items, static fn ($unidade): bool => (int) $unidade->getCompany()->getId() === $companyId));
+                $items = array_values(array_filter($items, static fn ($unidade): bool => (int) $unidade->getCompanyId() === $companyId));
             }
 
             return $this->responseFactory->success([
@@ -86,7 +86,7 @@ final class UnidadeNegocioController extends AbstractController
     public function getById(int $id): JsonResponse
     {
         $unidade = $this->unidadeNegocioService->getById($id);
-        $this->guardCompanyAccess((int) $unidade->getCompany()->getId());
+        $this->guardCompanyAccess((int) $unidade->getCompanyId());
 
         return $this->responseFactory->success([
             'item' => UnidadeNegocioResponse::fromEntity($unidade),

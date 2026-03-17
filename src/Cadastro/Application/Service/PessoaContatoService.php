@@ -32,7 +32,7 @@ final class PessoaContatoService
 
         return $this->tx->run(function () use ($r, $pessoa, $currentUserId): PessoaContato {
             $c = new PessoaContato(
-                $pessoa->getCompany(),
+                $pessoa->getCompanyId(),
                 $pessoa,
                 $r->nomeContato,
                 $r->principal,
@@ -42,7 +42,7 @@ final class PessoaContatoService
                 $currentUserId,
             );
             $this->repo->save($c);
-            $this->audit->log((int) $pessoa->getCompany()->getId(), 'pessoa_contato', 'cadastro.pessoa_contato.created', ['contatoId' => $c->getId(), 'pessoaId' => $pessoa->getId()]);
+            $this->audit->log((int) $pessoa->getCompanyId(), 'pessoa_contato', 'cadastro.pessoa_contato.created', ['contatoId' => $c->getId(), 'pessoaId' => $pessoa->getId()]);
 
             return $c;
         });
@@ -64,7 +64,7 @@ final class PessoaContatoService
                 $currentUserId,
             );
             $this->repo->save($contato);
-            $this->audit->log((int) $contato->getCompany()->getId(), 'pessoa_contato', 'cadastro.pessoa_contato.updated', ['contatoId' => $contato->getId()]);
+            $this->audit->log((int) $contato->getCompanyId(), 'pessoa_contato', 'cadastro.pessoa_contato.updated', ['contatoId' => $contato->getId()]);
 
             return $contato;
         });
@@ -94,7 +94,7 @@ final class PessoaContatoService
 
         $this->tx->run(function () use ($contato, $currentUserId): void {
             $this->repo->softDelete($contato);
-            $this->audit->log((int) $contato->getCompany()->getId(), 'pessoa_contato', 'cadastro.pessoa_contato.deleted', ['contatoId' => $contato->getId()]);
+            $this->audit->log((int) $contato->getCompanyId(), 'pessoa_contato', 'cadastro.pessoa_contato.deleted', ['contatoId' => $contato->getId()]);
         });
     }
 }

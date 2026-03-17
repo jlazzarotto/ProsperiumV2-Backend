@@ -35,7 +35,7 @@ final class AprovacaoTituloService
         $authenticatedUser = $this->authenticatedUserProvider->requireUser();
         $company = $this->companyRepo->findById((int) $r->companyId); $empresa = $this->empresaRepo->findById((int) $r->empresaId); $unidade = $this->unidadeRepo->findById((int) $r->unidadeId); $titulo = $this->tituloRepo->findById((int) $r->tituloId); $solicitante = $this->userRepo->findById($authenticatedUser->id);
         if (!$company || !$empresa || !$unidade || !$titulo || !$solicitante) { throw new ResourceNotFoundException('Contexto de aprovação inválido.'); }
-        if ($titulo->getCompany()->getId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId()) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
+        if ($titulo->getCompanyId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId()) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
         $tipoOperacao = $r->tipoOperacao ?? sprintf('aprovacao_titulo_%s', $titulo->getTipo());
         $valor = $titulo->getValorTotal();
         $aprovadores = [];
@@ -47,13 +47,13 @@ final class AprovacaoTituloService
             $aprovadores[] = $aprovador;
         }
         return $this->tx->run(function () use ($company, $empresa, $unidade, $titulo, $solicitante, $tipoOperacao, $valor, $aprovadores): array {
-            $aprovacao = new AprovacaoTitulo($company, $empresa, $unidade, $titulo, $solicitante, $tipoOperacao, $valor);
+            $aprovacao = new AprovacaoTitulo((int) $company->getId(), $empresa, $unidade, $titulo, (int) $solicitante->getId(), $tipoOperacao, $valor);
             $this->repo->save($aprovacao);
             $itens = [];
             foreach ($aprovadores as $ordem => $aprovador) {
-                $item = new AprovacaoTituloItem($aprovacao, $aprovador, $ordem + 1, $valor);
+                $item = new AprovacaoTituloItem($aprovacao, (int) $aprovador->getId(), $ordem + 1, $valor);
                 $this->itemRepo->save($item);
-                $this->notificacaoRepo->save(new NotificacaoSistema($company, $empresa, $unidade, $aprovador, 'aprovacao_titulo', 'Nova aprovação pendente', sprintf('O título %d foi enviado para sua aprovação.', $titulo->getId()), ['aprovacaoId' => $aprovacao->getId(), 'tituloId' => $titulo->getId()]));
+                $this->notificacaoRepo->save(new NotificacaoSistema((int) $company->getId(), $empresa, $unidade, (int) $aprovador->getId(), 'aprovacao_titulo', 'Nova aprovação pendente', sprintf('O título %d foi enviado para sua aprovação.', $titulo->getId()), ['aprovacaoId' => $aprovacao->getId(), 'tituloId' => $titulo->getId()]));
                 $itens[] = $item;
             }
             $this->automacaoService->aplicarParaTitulo($titulo, 'aprovacao', $solicitante);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Application\Service;
 
-use App\Cadastro\Domain\Entity\Uf;
+use App\Cadastro\Domain\Entity\Referencia\Uf;
 use App\Cadastro\Domain\Repository\UfRepositoryInterface;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
 use Doctrine\ORM\EntityManagerInterface;

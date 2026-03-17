@@ -33,8 +33,13 @@ final class CompanyController extends AbstractController
     {
         $this->denyAccessUnlessGranted(User::ROLE_ROOT);
 
+        $configured = array_values(array_filter(
+            $this->tenantRegistry->listTenants(),
+            fn (array $tenant): bool => $this->tenantRegistry->findDatabaseUrl($tenant['key']) !== null
+        ));
+
         return $this->responseFactory->success([
-            'items' => $this->tenantRegistry->listTenants(),
+            'items' => $configured,
         ]);
     }
 

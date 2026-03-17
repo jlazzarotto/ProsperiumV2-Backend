@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Company\Domain\Repository;
 
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 
 interface UnidadeNegocioRepositoryInterface
 {

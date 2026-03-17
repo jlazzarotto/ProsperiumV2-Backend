@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Infrastructure\Persistence\Doctrine;
 
-use App\Cadastro\Domain\Entity\Uf;
+use App\Cadastro\Domain\Entity\Referencia\Uf;
 use App\Cadastro\Domain\Repository\UfRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/** @extends ServiceEntityRepository<Uf> */
-final class DoctrineUfRepository extends ServiceEntityRepository implements UfRepositoryInterface
+/** @extends EntityRepository<Uf> */
+final class DoctrineUfRepository extends EntityRepository implements UfRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Uf::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.control_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(Uf::class));
     }
 
     public function findByCodigoIbge(int $codigoIbge): ?Uf

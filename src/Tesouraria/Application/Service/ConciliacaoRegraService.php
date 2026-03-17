@@ -20,7 +20,7 @@ final class ConciliacaoRegraService
     {
         $this->validator->validate($r); $company=$this->companyRepo->findById((int)$r->companyId); if(!$company){ throw new ResourceNotFoundException('Company não encontrada.'); }
         $empresa=$r->empresaId!==null ? $this->empresaRepo->findById($r->empresaId) : null; $unidade=$r->unidadeId!==null ? $this->unidadeRepo->findById($r->unidadeId) : null; $conta=$r->contaFinanceiraId!==null ? $this->contaRepo->findById($r->contaFinanceiraId) : null;
-        if(($empresa && $empresa->getCompany()->getId()!==$company->getId())||($unidade && $unidade->getCompany()->getId()!==$company->getId())||($conta && $conta->getCompany()->getId()!==$company->getId())){ throw new ValidationException(['contexto'=>['Empresa, unidade e conta devem pertencer à mesma company.']]); }
+        if(($empresa && $empresa->getCompanyId()!==$company->getId())||($unidade && $unidade->getCompanyId()!==$company->getId())||($conta && $conta->getCompanyId()!==$company->getId())){ throw new ValidationException(['contexto'=>['Empresa, unidade e conta devem pertencer à mesma company.']]); }
         return $this->tx->run(function() use($r,$company,$empresa,$unidade,$conta): ConciliacaoRegra { $regra=new ConciliacaoRegra($company,$empresa,$unidade,$conta,$r->descricaoContains,$r->tipoMovimentoSugerido,$r->aplicacao,$r->status); $this->repo->save($regra); $this->audit->log((int)$company->getId(),'conciliacao_regra','tesouraria.conciliacao_regra.criada',['regraId'=>$regra->getId()]); return $regra; });
     }
 }

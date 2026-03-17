@@ -28,18 +28,24 @@ final class DoctrineUserUnidadeRepository extends ServiceEntityRepository implem
 
     public function userHasUnidade(int $userId, int $companyId, int $unidadeId): bool
     {
-        return $this->count([
-            'user' => $userId,
-            'company' => $companyId,
-            'unidade' => $unidadeId,
-            'status' => 'active',
-        ]) > 0;
+        return (bool) $this->createQueryBuilder('userUnidade')
+            ->select('COUNT(userUnidade.id)')
+            ->andWhere('userUnidade.user = :userId')
+            ->andWhere('userUnidade.company = :companyId')
+            ->andWhere('userUnidade.unidadeId = :unidadeId')
+            ->andWhere('userUnidade.status = :status')
+            ->setParameter('userId', $userId)
+            ->setParameter('companyId', $companyId)
+            ->setParameter('unidadeId', $unidadeId)
+            ->setParameter('status', 'active')
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function listUnidadeIdsByUser(int $userId, ?int $companyId = null): array
     {
         $qb = $this->createQueryBuilder('userUnidade')
-            ->select('IDENTITY(userUnidade.unidade) AS unidadeId')
+            ->select('userUnidade.unidadeId')
             ->andWhere('userUnidade.user = :userId')
             ->setParameter('userId', $userId);
 

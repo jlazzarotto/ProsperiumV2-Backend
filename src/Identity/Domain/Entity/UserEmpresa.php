@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Identity\Domain\Entity;
 
 use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
 use App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserEmpresaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -27,9 +26,8 @@ class UserEmpresa
     #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Company $company;
 
-    #[ORM\ManyToOne(targetEntity: Empresa::class)]
-    #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Empresa $empresa;
+    #[ORM\Column(name: 'empresa_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $empresaId;
 
     #[ORM\Column(length: 30, options: ['default' => 'active'])]
     private string $status;
@@ -37,11 +35,11 @@ class UserEmpresa
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(User $user, Company $company, Empresa $empresa, string $status = 'active')
+    public function __construct(User $user, Company $company, int $empresaId, string $status = 'active')
     {
         $this->user = $user;
         $this->company = $company;
-        $this->empresa = $empresa;
+        $this->empresaId = $empresaId;
         $this->status = $status;
         $this->createdAt = new \DateTimeImmutable();
     }

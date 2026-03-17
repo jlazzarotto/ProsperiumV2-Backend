@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Financeiro\Domain\Entity;
 
-use App\Company\Domain\Entity\Company;
 use App\Financeiro\Infrastructure\Persistence\Doctrine\DoctrineAnexoFinanceiroRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -16,9 +15,8 @@ class AnexoFinanceiro
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
     #[ORM\ManyToOne(targetEntity: Titulo::class)]
     #[ORM\JoinColumn(name: 'titulo_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Titulo $titulo;
@@ -30,6 +28,6 @@ class AnexoFinanceiro
     private ?string $mimeType;
     #[ORM\Column(name: 'uploaded_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $uploadedAt;
-    public function __construct(Company $company, Titulo $titulo, string $fileName, string $filePath, ?string $mimeType)
+    public function __construct(int $companyId, Titulo $titulo, string $fileName, string $filePath, ?string $mimeType)
     { $this->company=$company; $this->titulo=$titulo; $this->fileName=trim($fileName); $this->filePath=trim($filePath); $this->mimeType=$mimeType !== null ? trim($mimeType) : null; $this->uploadedAt=new \DateTimeImmutable(); }
 }

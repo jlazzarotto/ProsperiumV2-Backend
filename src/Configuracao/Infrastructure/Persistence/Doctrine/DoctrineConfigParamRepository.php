@@ -40,7 +40,7 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
         $repo = $em->getRepository(ConfigParam::class);
 
         return $repo->createQueryBuilder('p')
-            ->andWhere('p.company = :companyId')
+            ->andWhere('p.companyId = :companyId')
             ->andWhere('p.name = :name')
             ->setParameter('companyId', $companyId)
             ->setParameter('name', $name)
@@ -55,7 +55,7 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
         $repo = $em->getRepository(ConfigParam::class);
 
         return $repo->createQueryBuilder('p')
-            ->andWhere('p.company = :companyId')
+            ->andWhere('p.companyId = :companyId')
             ->setParameter('companyId', $companyId)
             ->orderBy('p.name', 'ASC')
             ->getQuery()
@@ -69,7 +69,7 @@ final class DoctrineConfigParamRepository extends ServiceEntityRepository implem
 
         $rows = $repo->createQueryBuilder('p')
             ->select('DISTINCT p.type')
-            ->andWhere('p.company = :companyId')
+            ->andWhere('p.companyId = :companyId')
             ->andWhere('p.type IS NOT NULL')
             ->andWhere("TRIM(p.type) != ''")
             ->setParameter('companyId', $companyId)

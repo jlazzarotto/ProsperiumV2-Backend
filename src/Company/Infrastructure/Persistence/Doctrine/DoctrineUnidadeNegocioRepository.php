@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Company\Infrastructure\Persistence\Doctrine;
 
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Company\Domain\Repository\UnidadeNegocioRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * @extends ServiceEntityRepository<UnidadeNegocio>
+ * @extends EntityRepository<UnidadeNegocio>
  */
-final class DoctrineUnidadeNegocioRepository extends ServiceEntityRepository implements UnidadeNegocioRepositoryInterface
+final class DoctrineUnidadeNegocioRepository extends EntityRepository implements UnidadeNegocioRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, UnidadeNegocio::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(UnidadeNegocio::class));
     }
 
     public function save(UnidadeNegocio $unidadeNegocio): void
@@ -34,7 +37,7 @@ final class DoctrineUnidadeNegocioRepository extends ServiceEntityRepository imp
     public function existsByCompanyAndNome(int $companyId, string $nome): bool
     {
         return $this->count([
-            'company' => $companyId,
+            'companyId' => $companyId,
             'nome' => trim($nome),
         ]) > 0;
     }
@@ -42,7 +45,7 @@ final class DoctrineUnidadeNegocioRepository extends ServiceEntityRepository imp
     public function existsByCompanyAndAbreviatura(int $companyId, string $abreviatura): bool
     {
         return $this->count([
-            'company' => $companyId,
+            'companyId' => $companyId,
             'abreviatura' => trim($abreviatura),
         ]) > 0;
     }
@@ -54,7 +57,7 @@ final class DoctrineUnidadeNegocioRepository extends ServiceEntityRepository imp
 
         if ($companyId !== null) {
             $qb
-                ->andWhere('unidade.company = :companyId')
+                ->andWhere('unidade.companyId = :companyId')
                 ->setParameter('companyId', $companyId);
         }
 

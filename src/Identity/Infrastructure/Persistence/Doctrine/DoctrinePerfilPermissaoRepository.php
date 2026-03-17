@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Identity\Infrastructure\Persistence\Doctrine;
 
-use App\Identity\Domain\Entity\PerfilPermissao;
+use App\Identity\Domain\Entity\Tenant\PerfilPermissao;
 use App\Identity\Domain\Repository\PerfilPermissaoRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * @extends ServiceEntityRepository<PerfilPermissao>
+ * @extends EntityRepository<PerfilPermissao>
  */
-final class DoctrinePerfilPermissaoRepository extends ServiceEntityRepository implements PerfilPermissaoRepositoryInterface
+final class DoctrinePerfilPermissaoRepository extends EntityRepository implements PerfilPermissaoRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, PerfilPermissao::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(PerfilPermissao::class));
     }
 
     public function save(PerfilPermissao $perfilPermissao): void
@@ -29,21 +32,19 @@ final class DoctrinePerfilPermissaoRepository extends ServiceEntityRepository im
     public function listPermissionCodesByPerfil(int $perfilId): array
     {
         $rows = $this->createQueryBuilder('perfilPermissao')
-            ->select('permissao.codigo AS codigo')
-            ->innerJoin('perfilPermissao.permissao', 'permissao')
+            ->select('perfilPermissao.permissaoId AS permissaoId')
             ->andWhere('perfilPermissao.perfil = :perfilId')
             ->setParameter('perfilId', $perfilId)
-            ->orderBy('permissao.codigo', 'ASC')
             ->getQuery()
             ->getArrayResult();
 
-        return array_map(static fn (array $row): string => (string) $row['codigo'], $rows);
+        return array_map(static fn (array $row): string => (string) $row['permissaoId'], $rows);
     }
 
     public function deleteByPerfilId(int $perfilId): void
     {
         $this->getEntityManager()
-            ->createQuery('DELETE FROM App\Identity\Domain\Entity\PerfilPermissao pap WHERE pap.perfil = :perfilId')
+            ->createQuery('DELETE FROM App\Identity\Domain\Entity\Tenant\PerfilPermissao pap WHERE pap.perfil = :perfilId')
             ->setParameter('perfilId', $perfilId)
             ->execute();
     }

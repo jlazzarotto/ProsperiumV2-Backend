@@ -87,7 +87,7 @@ final class JwtAuthenticationFailureListener
         $this->userRepository->save($user);
 
         $this->auditoriaLogger->log(
-            $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+            $user->getCompany()?->getId() !== null ? (int) $user->getCompanyId() : null,
             'auth',
             'identity.login.failed',
             [

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Application\Service;
 
-use App\Cadastro\Domain\Entity\Municipio;
+use App\Cadastro\Domain\Entity\Referencia\Municipio;
 use App\Cadastro\Domain\Repository\MunicipioRepositoryInterface;
 use App\Shared\Domain\Contract\TransactionRunnerInterface;
 use App\Shared\Infrastructure\Auditoria\AuditoriaLogger;

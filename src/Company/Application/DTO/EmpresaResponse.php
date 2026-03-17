@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Company\Application\DTO;
 
-use App\Company\Domain\Entity\Empresa;
+use App\Company\Domain\Entity\Tenant\Empresa;
 
 final class EmpresaResponse
 {
@@ -12,7 +12,7 @@ final class EmpresaResponse
     {
         return [
             'id' => $empresa->getId(),
-            'companyId' => $empresa->getCompany()->getId(),
+            'companyId' => $empresa->getCompanyId(),
             'razaoSocial' => $empresa->getRazaoSocial(),
             'nomeFantasia' => $empresa->getNomeFantasia(),
             'apelido' => $empresa->getApelido(),

@@ -40,4 +40,12 @@ final class DoctrineTenantInstanceRepository extends ServiceEntityRepository imp
     {
         return $this->findOneBy(['databaseKey' => trim($databaseKey)]);
     }
+
+    /**
+     * @return list<TenantInstance>
+     */
+    public function findAllActive(): array
+    {
+        return $this->findBy(['status' => 'active'], ['databaseKey' => 'ASC']);
+    }
 }

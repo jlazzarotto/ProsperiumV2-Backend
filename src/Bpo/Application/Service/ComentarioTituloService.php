@@ -26,9 +26,9 @@ final class ComentarioTituloService
         $authenticatedUser = $this->authenticatedUserProvider->requireUser();
         $company = $this->companyRepo->findById((int) $r->companyId); $empresa = $this->empresaRepo->findById((int) $r->empresaId); $unidade = $this->unidadeRepo->findById((int) $r->unidadeId); $titulo = $this->tituloRepo->findById($tituloId); $user = $this->userRepo->findById($authenticatedUser->id);
         if (!$company || !$empresa || !$unidade || !$titulo || !$user) { throw new ResourceNotFoundException('Contexto de comentário inválido.'); }
-        if ($titulo->getCompany()->getId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId()) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
+        if ($titulo->getCompanyId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId()) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
         return $this->tx->run(function () use ($company, $empresa, $unidade, $titulo, $user, $r): ComentarioTitulo {
-            $comentario = new ComentarioTitulo($company, $empresa, $unidade, $titulo, $user, $r->comentario);
+            $comentario = new ComentarioTitulo((int) $company->getId(), $empresa, $unidade, $titulo, (int) $user->getId(), $r->comentario);
             $this->repo->save($comentario);
             $this->automacaoService->aplicarParaTitulo($titulo, 'comentario', $user);
             $this->audit->log((int) $company->getId(), 'titulo_comentario', 'bpo.titulo.comentario.criado', ['tituloId' => $titulo->getId(), 'comentarioId' => $comentario->getId()]);

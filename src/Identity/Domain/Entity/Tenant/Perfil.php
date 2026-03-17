@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Identity\Domain\Entity;
+namespace App\Identity\Domain\Entity\Tenant;
 
-use App\Company\Domain\Entity\Company;
 use App\Identity\Infrastructure\Persistence\Doctrine\DoctrinePerfilRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -18,9 +17,8 @@ class Perfil
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
-    private ?Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $companyId;
 
     #[ORM\Column(length: 100)]
     private string $codigo;
@@ -34,9 +32,9 @@ class Perfil
     #[ORM\Column(length: 30, options: ['default' => 'active'])]
     private string $status;
 
-    public function __construct(?Company $company, string $codigo, string $nome, string $tipo = 'custom', string $status = 'active')
+    public function __construct(?int $companyId, string $codigo, string $nome, string $tipo = 'custom', string $status = 'active')
     {
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->codigo = trim($codigo);
         $this->nome = trim($nome);
         $this->tipo = $tipo;
@@ -48,9 +46,9 @@ class Perfil
         return $this->id;
     }
 
-    public function getCompany(): ?Company
+    public function getCompanyId(): ?int
     {
-        return $this->company;
+        return $this->companyId;
     }
 
     public function getCodigo(): string

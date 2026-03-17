@@ -32,8 +32,8 @@ final class TenantResolver
         if (is_string($tenantId) && trim($tenantId) !== '') {
             $tenantInstance = $this->tenantInstanceRepository->findByDatabaseKey($tenantId);
 
-            if ($tenantInstance !== null && $tenantInstance->getCompany()->getId() !== null) {
-                return ['tenantId' => $tenantId, 'companyId' => (int) $tenantInstance->getCompany()->getId()];
+            if ($tenantInstance !== null && $tenantInstance->getCompanyId() !== null) {
+                return ['tenantId' => $tenantId, 'companyId' => (int) $tenantInstance->getCompanyId()];
             }
         }
 

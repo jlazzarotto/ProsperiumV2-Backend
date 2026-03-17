@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Cadastro\Domain\Entity;
+namespace App\Cadastro\Domain\Entity\Referencia;
 
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrinePaisRepository;
 use Doctrine\ORM\Mapping as ORM;

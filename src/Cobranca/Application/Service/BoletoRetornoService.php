@@ -23,13 +23,13 @@ final class BoletoRetornoService
         $this->validator->validate($r);
         $company = $this->companyRepo->findById((int) $r->companyId); if ($company === null) { throw new ResourceNotFoundException('Company não encontrada.'); }
         $remessa = $r->remessaId !== null ? $this->remessaRepo->findById($r->remessaId) : null;
-        if ($r->remessaId !== null && ($remessa === null || $remessa->getCompany()->getId() !== $company->getId())) { throw new ValidationException(['remessaId' => ['Remessa inválida para a company informada.']]); }
+        if ($r->remessaId !== null && ($remessa === null || $remessa->getCompanyId() !== $company->getId())) { throw new ValidationException(['remessaId' => ['Remessa inválida para a company informada.']]); }
         return $this->tx->run(function () use ($r, $company, $remessa): array {
             $importados = [];
             foreach ($r->itens as $payload) {
                 $itemRemessa = $this->remessaItemRepo->findByNossoNumero((string) $payload['nossoNumero']);
                 if ($itemRemessa === null) { throw new ValidationException(['itens' => [sprintf('Nosso número %s não encontrado.', $payload['nossoNumero'])]]); }
-                if ($itemRemessa->getRemessa()->getCompany()->getId() !== $company->getId()) { throw new ValidationException(['itens' => [sprintf('Nosso número %s não pertence à company informada.', $payload['nossoNumero'])]]); }
+                if ($itemRemessa->getRemessa()->getCompanyId() !== $company->getId()) { throw new ValidationException(['itens' => [sprintf('Nosso número %s não pertence à company informada.', $payload['nossoNumero'])]]); }
                 if ($remessa !== null && $itemRemessa->getRemessa()->getId() !== $remessa->getId()) { throw new ValidationException(['itens' => [sprintf('Nosso número %s não pertence à remessa informada.', $payload['nossoNumero'])]]); }
                 $status = $this->mapearStatusOcorrencia((string) $payload['codigoOcorrencia']);
                 $dataOcorrencia = new \DateTimeImmutable((string) ($payload['dataOcorrencia'] ?? 'now'));

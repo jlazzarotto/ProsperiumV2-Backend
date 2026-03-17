@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Domain\Repository;
 
-use App\Cadastro\Domain\Entity\Municipio;
+use App\Cadastro\Domain\Entity\Referencia\Municipio;
 
 interface MunicipioRepositoryInterface
 {

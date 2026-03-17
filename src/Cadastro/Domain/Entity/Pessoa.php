@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Cadastro\Domain\Entity;
 
 use App\Cadastro\Infrastructure\Persistence\Doctrine\DoctrinePessoaRepository;
-use App\Company\Domain\Entity\Company;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrinePessoaRepository::class)]
 #[ORM\Table(name: 'pessoas')]
 #[ORM\UniqueConstraint(name: 'uk_pessoas_company_documento', columns: ['company_id', 'documento'])]
+#[ORM\UniqueConstraint(name: 'uk_pessoas_company_email', columns: ['company_id', 'email_principal'])]
 #[ORM\Index(name: 'idx_pessoas_company', columns: ['company_id', 'status'])]
 #[ORM\Index(name: 'idx_pessoas_company_nome', columns: ['company_id', 'nome_razao'])]
 class Pessoa
@@ -20,9 +20,8 @@ class Pessoa
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\Column(name: 'tipo_pessoa', type: 'string', length: 2)]
     private string $tipoPessoa;
@@ -67,7 +66,7 @@ class Pessoa
     private ?\DateTimeImmutable $deletedAt = null;
 
     public function __construct(
-        Company $company,
+        int $companyId,
         string $tipoPessoa,
         string $nomeRazao,
         ?string $nomeFantasia = null,
@@ -80,7 +79,7 @@ class Pessoa
         ?string $classificacao = null,
     ) {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->tipoPessoa = strtoupper(trim($tipoPessoa));
         $this->classificacao = self::normalizeClassificacao($classificacao);
         $this->nomeRazao = trim($nomeRazao);
@@ -97,7 +96,7 @@ class Pessoa
     }
 
     public function getId(): ?int { return $this->id; }
-    public function getCompany(): Company { return $this->company; }
+    public function getCompanyId(): int { return $this->companyId; }
     public function getTipoPessoa(): string { return $this->tipoPessoa; }
     public function getClassificacao(): ?string { return $this->classificacao; }
     public function getNomeRazao(): string { return $this->nomeRazao; }

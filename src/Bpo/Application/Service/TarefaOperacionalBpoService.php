@@ -31,16 +31,16 @@ final class TarefaOperacionalBpoService
         $this->validator->validate($r);
         $company = $this->companyRepo->findById((int) $r->companyId); $empresa = $this->empresaRepo->findById((int) $r->empresaId); $unidade = $this->unidadeRepo->findById((int) $r->unidadeId);
         if (!$company || !$empresa || !$unidade) { throw new ResourceNotFoundException('Contexto BPO inválido.'); }
-        if ($empresa->getCompany()->getId() !== $company->getId() || $unidade->getCompany()->getId() !== $company->getId()) { throw new ValidationException(['contexto' => ['Company, empresa e unidade devem ser compatíveis.']]); }
+        if ($empresa->getCompanyId() !== $company->getId() || $unidade->getCompanyId() !== $company->getId()) { throw new ValidationException(['contexto' => ['Company, empresa e unidade devem ser compatíveis.']]); }
         $titulo = $r->tituloId !== null ? $this->tituloRepo->findById($r->tituloId) : null; $responsavel = $r->responsavelUserId !== null ? $this->userRepo->findById($r->responsavelUserId) : null;
-        if ($titulo !== null && ($titulo->getCompany()->getId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId())) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
+        if ($titulo !== null && ($titulo->getCompanyId() !== $company->getId() || $titulo->getEmpresa()->getId() !== $empresa->getId() || $titulo->getUnidade()->getId() !== $unidade->getId())) { throw new ValidationException(['tituloId' => ['Título fora do contexto informado.']]); }
         if ($r->responsavelUserId !== null && $responsavel === null) { throw new ResourceNotFoundException('Usuário responsável não encontrado.'); }
         if ($responsavel !== null && !$this->responsavelPossuiEscopo((int) $responsavel->getId(), (int) $company->getId(), (int) $empresa->getId(), (int) $unidade->getId())) { throw new ValidationException(['responsavelUserId' => ['Usuário responsável não possui escopo ativo para a company, empresa e unidade informadas.']]); }
         return $this->tx->run(function () use ($company, $empresa, $unidade, $titulo, $responsavel, $r): TarefaOperacionalBpo {
-            $tarefa = new TarefaOperacionalBpo($company, $empresa, $unidade, $titulo, $responsavel, $r->tipo, $r->descricao, $r->prioridade, $r->prazoEm !== null ? new \DateTimeImmutable($r->prazoEm) : null);
+            $tarefa = new TarefaOperacionalBpo((int) $company->getId(), $empresa, $unidade, $titulo, $responsavel !== null ? (int) $responsavel->getId() : null, $r->tipo, $r->descricao, $r->prioridade, $r->prazoEm !== null ? new \DateTimeImmutable($r->prazoEm) : null);
             $this->repo->save($tarefa);
-            $this->historicoRepo->save(new TarefaOperacionalHistorico($tarefa, $responsavel, 'criada', 'Tarefa criada no fluxo BPO.'));
-            if ($responsavel !== null) { $this->notificacaoRepo->save(new NotificacaoSistema($company, $empresa, $unidade, $responsavel, 'tarefa_bpo', 'Nova tarefa operacional', sprintf('Tarefa "%s" atribuída ao usuário %s.', $tarefa->getTipo(), $responsavel->getNome()), ['tarefaId' => $tarefa->getId()])); }
+            $this->historicoRepo->save(new TarefaOperacionalHistorico($tarefa, $responsavel !== null ? (int) $responsavel->getId() : null, 'criada', 'Tarefa criada no fluxo BPO.'));
+            if ($responsavel !== null) { $this->notificacaoRepo->save(new NotificacaoSistema((int) $company->getId(), $empresa, $unidade, (int) $responsavel->getId(), 'tarefa_bpo', 'Nova tarefa operacional', sprintf('Tarefa "%s" atribuída ao usuário %s.', $tarefa->getTipo(), $responsavel->getNome()), ['tarefaId' => $tarefa->getId()])); }
             $this->audit->log((int) $company->getId(), 'tarefa_bpo', 'bpo.tarefa.criada', ['tarefaId' => $tarefa->getId()]);
             $this->eventBus->publish(new TarefaBpoCriada((int) $tarefa->getId(), (int) $company->getId()));
             return $tarefa;

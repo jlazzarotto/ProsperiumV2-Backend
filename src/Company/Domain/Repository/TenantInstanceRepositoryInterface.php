@@ -15,4 +15,9 @@ interface TenantInstanceRepositoryInterface
     public function existsByDatabaseKey(string $databaseKey): bool;
 
     public function findByDatabaseKey(string $databaseKey): ?TenantInstance;
+
+    /**
+     * @return list<TenantInstance>
+     */
+    public function findAllActive(): array;
 }

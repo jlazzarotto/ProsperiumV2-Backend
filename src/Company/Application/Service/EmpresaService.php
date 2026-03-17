@@ -6,7 +6,7 @@ namespace App\Company\Application\Service;
 
 use App\Company\Application\DTO\CreateEmpresaRequest;
 use App\Company\Application\DTO\UpdateEmpresaRequest;
-use App\Company\Domain\Entity\Empresa;
+use App\Company\Domain\Entity\Tenant\Empresa;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Company\Domain\Repository\EmpresaRepositoryInterface;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
@@ -49,7 +49,7 @@ final class EmpresaService
 
         $empresa = $this->transactionRunner->run(function () use ($request, $company, $cnpj): Empresa {
             $empresa = new Empresa(
-                $company,
+                (int)$company->getId(),
                 $request->razaoSocial,
                 $request->nomeFantasia,
                 $cnpj,
@@ -177,7 +177,7 @@ final class EmpresaService
     public function delete(int $id): void
     {
         $empresa = $this->getById($id);
-        $company = $empresa->getCompany();
+        $company = $this->companyRepository->findById($empresa->getCompanyId());
 
         $this->transactionRunner->run(function () use ($empresa, $company): void {
             $this->empresaRepository->softDelete($empresa);

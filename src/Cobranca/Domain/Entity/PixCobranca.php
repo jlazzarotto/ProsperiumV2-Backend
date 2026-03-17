@@ -2,9 +2,8 @@
 declare(strict_types=1);
 namespace App\Cobranca\Domain\Entity;
 use App\Cadastro\Domain\Entity\ContaFinanceira;
-use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\Empresa;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Cobranca\Infrastructure\Persistence\Doctrine\DoctrinePixCobrancaRepository;
 use App\Financeiro\Domain\Entity\TituloParcela;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,7 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 class PixCobranca
 {
     #[ORM\Id] #[ORM\GeneratedValue] #[ORM\Column(type: 'bigint', options: ['unsigned' => true])] private ?int $id = null;
-    #[ORM\ManyToOne(targetEntity: Company::class)] #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])] private int $companyId;
     #[ORM\ManyToOne(targetEntity: Empresa::class)] #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private Empresa $empresa;
     #[ORM\ManyToOne(targetEntity: UnidadeNegocio::class)] #[ORM\JoinColumn(name: 'unidade_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private UnidadeNegocio $unidade;
     #[ORM\ManyToOne(targetEntity: TituloParcela::class)] #[ORM\JoinColumn(name: 'titulo_parcela_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')] private TituloParcela $parcela;
@@ -29,7 +28,7 @@ class PixCobranca
     #[ORM\Column(name: 'calendario_expira_em', type: 'datetime_immutable')] private \DateTimeImmutable $calendarioExpiraEm;
     #[ORM\Column(name: 'qr_code', type: 'text', nullable: true)] private ?string $qrCode;
     #[ORM\Column(name: 'copia_cola', type: 'text', nullable: true)] private ?string $copiaCola;
-    public function __construct(Company $company, Empresa $empresa, UnidadeNegocio $unidade, TituloParcela $parcela, ContaFinanceira $contaFinanceira, string $txid, string $chavePix, string $valor, int $expiracaoSegundos, ?string $qrCode = null, ?string $copiaCola = null) { $agora = new \DateTimeImmutable(); $this->company = $company; $this->empresa = $empresa; $this->unidade = $unidade; $this->parcela = $parcela; $this->contaFinanceira = $contaFinanceira; $this->txid = trim($txid); $this->chavePix = trim($chavePix); $this->valor = $valor; $this->status = 'pendente'; $this->expiracaoSegundos = $expiracaoSegundos; $this->calendarioGeradoEm = $agora; $this->calendarioExpiraEm = $agora->modify(sprintf('+%d seconds', $expiracaoSegundos)); $this->qrCode = $qrCode; $this->copiaCola = $copiaCola; }
-    public function getId(): ?int { return $this->id; } public function getCompany(): Company { return $this->company; } public function getEmpresa(): Empresa { return $this->empresa; } public function getUnidade(): UnidadeNegocio { return $this->unidade; } public function getParcela(): TituloParcela { return $this->parcela; } public function getContaFinanceira(): ContaFinanceira { return $this->contaFinanceira; } public function getTxid(): string { return $this->txid; } public function getChavePix(): string { return $this->chavePix; } public function getValor(): string { return $this->valor; } public function getStatus(): string { return $this->status; } public function getExpiracaoSegundos(): int { return $this->expiracaoSegundos; } public function getCalendarioExpiraEm(): \DateTimeImmutable { return $this->calendarioExpiraEm; } public function getQrCode(): ?string { return $this->qrCode; } public function getCopiaCola(): ?string { return $this->copiaCola; }
+    public function __construct(int $companyId, Empresa $empresa, UnidadeNegocio $unidade, TituloParcela $parcela, ContaFinanceira $contaFinanceira, string $txid, string $chavePix, string $valor, int $expiracaoSegundos, ?string $qrCode = null, ?string $copiaCola = null) { $agora = new \DateTimeImmutable(); $this->companyId = $companyId; $this->empresa = $empresa; $this->unidade = $unidade; $this->parcela = $parcela; $this->contaFinanceira = $contaFinanceira; $this->txid = trim($txid); $this->chavePix = trim($chavePix); $this->valor = $valor; $this->status = 'pendente'; $this->expiracaoSegundos = $expiracaoSegundos; $this->calendarioGeradoEm = $agora; $this->calendarioExpiraEm = $agora->modify(sprintf('+%d seconds', $expiracaoSegundos)); $this->qrCode = $qrCode; $this->copiaCola = $copiaCola; }
+    public function getId(): ?int { return $this->id; } public function getCompanyId(): int { return $this->companyId; } public function getEmpresa(): Empresa { return $this->empresa; } public function getUnidade(): UnidadeNegocio { return $this->unidade; } public function getParcela(): TituloParcela { return $this->parcela; } public function getContaFinanceira(): ContaFinanceira { return $this->contaFinanceira; } public function getTxid(): string { return $this->txid; } public function getChavePix(): string { return $this->chavePix; } public function getValor(): string { return $this->valor; } public function getStatus(): string { return $this->status; } public function getExpiracaoSegundos(): int { return $this->expiracaoSegundos; } public function getCalendarioExpiraEm(): \DateTimeImmutable { return $this->calendarioExpiraEm; } public function getQrCode(): ?string { return $this->qrCode; } public function getCopiaCola(): ?string { return $this->copiaCola; }
     public function marcarRecebida(): void { $this->status = 'recebida'; }
 }

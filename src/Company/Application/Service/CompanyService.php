@@ -51,9 +51,9 @@ final class CompanyService
             ]);
         }
 
-        if ($this->tenantInstanceRepository->existsByDatabaseKey($databaseKey)) {
+        if ($request->tenancyMode === 'dedicated' && $this->tenantInstanceRepository->existsByDatabaseKey($databaseKey)) {
             throw new ValidationException([
-                'databaseKey' => ['databaseKey já está em uso.'],
+                'databaseKey' => ['databaseKey já está em uso por outro tenant dedicado.'],
             ]);
         }
 
@@ -171,11 +171,13 @@ final class CompanyService
             ]);
         }
 
-        $existingTenantInstance = $this->tenantInstanceRepository->findByDatabaseKey($databaseKey);
-        if ($existingTenantInstance !== null && (int) $existingTenantInstance->getId() !== (int) $tenantInstance->getId()) {
-            throw new ValidationException([
-                'databaseKey' => ['databaseKey já está em uso.'],
-            ]);
+        if ($request->tenancyMode === 'dedicated') {
+            $existingTenantInstance = $this->tenantInstanceRepository->findByDatabaseKey($databaseKey);
+            if ($existingTenantInstance !== null && (int) $existingTenantInstance->getId() !== (int) $tenantInstance->getId()) {
+                throw new ValidationException([
+                    'databaseKey' => ['databaseKey já está em uso por outro tenant dedicado.'],
+                ]);
+            }
         }
 
         $result = $this->transactionRunner->run(function () use ($company, $tenantInstance, $request, $databaseKey): array {

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Identity\Domain\Entity;
 
 use App\Company\Domain\Entity\Company;
-use App\Company\Domain\Entity\Empresa;
-use App\Company\Domain\Entity\UnidadeNegocio;
 use App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserAlcadaRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -27,13 +25,11 @@ class UserAlcada
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\ManyToOne(targetEntity: Empresa::class)]
-    #[ORM\JoinColumn(name: 'empresa_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
-    private ?Empresa $empresa;
+    #[ORM\Column(name: 'empresa_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $empresaId;
 
-    #[ORM\ManyToOne(targetEntity: UnidadeNegocio::class)]
-    #[ORM\JoinColumn(name: 'unidade_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
-    private ?UnidadeNegocio $unidade;
+    #[ORM\Column(name: 'unidade_id', type: 'bigint', nullable: true, options: ['unsigned' => true])]
+    private ?int $unidadeId;
 
     #[ORM\Column(name: 'tipo_operacao', length: 100)]
     private string $tipoOperacao;

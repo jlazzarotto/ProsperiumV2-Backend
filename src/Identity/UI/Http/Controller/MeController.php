@@ -39,13 +39,20 @@ final class MeController extends AbstractController
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
+        // ROLE_ROOT: apenas dados de usuário (dashboard global, sem acesso a tenant DB)
+        // Outros usuários: carregam dados da empresa/unidade/perfil do tenant DB
+        $profileCodes = [];
+        if (!$user->isRoot()) {
+            $profileCodes = $this->userPerfilRepository->listProfileCodesByUser((int) $user->getId());
+        }
+
         return $this->responseFactory->success([
             'item' => UserResponse::fromEntity(
                 $user,
                 $this->userCompanyRepository->listCompanyIdsByUser((int) $user->getId()),
                 $this->userEmpresaRepository->listEmpresaIdsByUser((int) $user->getId()),
                 $this->userUnidadeRepository->listUnidadeIdsByUser((int) $user->getId()),
-                $this->userPerfilRepository->listProfileCodesByUser((int) $user->getId()),
+                $profileCodes,
                 $this->accessCatalogService->buildEnabledModules(),
                 $this->accessCatalogService->buildPermissionMatrix($user),
                 $this->accessCatalogService->buildMenu($user)

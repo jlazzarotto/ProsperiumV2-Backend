@@ -7,8 +7,8 @@ namespace App\Identity\Application\Service;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Identity\Application\DTO\CreatePerfilRequest;
 use App\Identity\Application\DTO\UpdatePerfilRequest;
-use App\Identity\Domain\Entity\Perfil;
-use App\Identity\Domain\Entity\PerfilPermissao;
+use App\Identity\Domain\Entity\Tenant\Perfil;
+use App\Identity\Domain\Entity\Tenant\PerfilPermissao;
 use App\Identity\Domain\Repository\PerfilPermissaoRepositoryInterface;
 use App\Identity\Domain\Repository\PerfilRepositoryInterface;
 use App\Identity\Domain\Repository\PermissaoRepositoryInterface;
@@ -56,11 +56,11 @@ final class PerfilService
         }
 
         return $this->transactionRunner->run(function () use ($request, $company, $permissoes): Perfil {
-            $perfil = new Perfil($company, $request->codigo, $request->nome, $request->tipo, $request->status);
+            $perfil = new Perfil((int)$company->getId(), $request->codigo, $request->nome, $request->tipo, $request->status);
             $this->perfilRepository->save($perfil);
 
             foreach ($permissoes as $permissao) {
-                $this->perfilPermissaoRepository->save(new PerfilPermissao($perfil, $permissao));
+                $this->perfilPermissaoRepository->save(new PerfilPermissao($perfil, (int) $permissao->getId()));
             }
 
             $this->auditoriaLogger->log(
@@ -104,7 +104,7 @@ final class PerfilService
             throw new ResourceNotFoundException('Perfil não encontrado.');
         }
 
-        $company = $perfil->getCompany();
+        // company is now stored as companyId in Perfil
         $companyId = $company?->getId();
         $permissoes = $this->permissaoRepository->findByCodigos($request->permissionCodes);
 
@@ -120,7 +120,7 @@ final class PerfilService
             $this->perfilPermissaoRepository->deleteByPerfilId((int) $perfil->getId());
 
             foreach ($permissoes as $permissao) {
-                $this->perfilPermissaoRepository->save(new PerfilPermissao($perfil, $permissao));
+                $this->perfilPermissaoRepository->save(new PerfilPermissao($perfil, (int) $permissao->getId()));
             }
 
             $this->auditoriaLogger->log(

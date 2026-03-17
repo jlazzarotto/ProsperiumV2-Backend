@@ -32,7 +32,7 @@ final class PessoaContatoController extends AbstractController
     public function list(int $pessoaId): JsonResponse
     {
         $pessoa = $this->pessoaService->getById($pessoaId);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.view', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.view', (int) $pessoa->getCompanyId(), null));
 
         return $this->responseFactory->success([
             'items' => array_map(
@@ -46,7 +46,7 @@ final class PessoaContatoController extends AbstractController
     public function create(int $pessoaId, Request $request): JsonResponse
     {
         $pessoa = $this->pessoaService->getById($pessoaId);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompanyId(), null));
 
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -70,7 +70,7 @@ final class PessoaContatoController extends AbstractController
     public function update(int $pessoaId, int $id, Request $request): JsonResponse
     {
         $pessoa = $this->pessoaService->getById($pessoaId);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompanyId(), null));
 
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -93,7 +93,7 @@ final class PessoaContatoController extends AbstractController
     public function delete(int $pessoaId, int $id): JsonResponse
     {
         $pessoa = $this->pessoaService->getById($pessoaId);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompanyId(), null));
 
         $currentUser = $this->getUser();
         $currentUserId = $currentUser instanceof User ? (int) $currentUser->getId() : null;

@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Cadastro\Infrastructure\Persistence\Doctrine;
 
-use App\Cadastro\Domain\Entity\Municipio;
+use App\Cadastro\Domain\Entity\Referencia\Municipio;
 use App\Cadastro\Domain\Repository\MunicipioRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/** @extends ServiceEntityRepository<Municipio> */
-final class DoctrineMunicipioRepository extends ServiceEntityRepository implements MunicipioRepositoryInterface
+/** @extends EntityRepository<Municipio> */
+final class DoctrineMunicipioRepository extends EntityRepository implements MunicipioRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Municipio::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.control_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(Municipio::class));
     }
 
     public function save(Municipio $municipio): void

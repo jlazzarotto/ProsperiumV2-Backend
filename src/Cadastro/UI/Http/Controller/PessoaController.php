@@ -47,7 +47,7 @@ final class PessoaController extends AbstractController
     public function getById(int $id): JsonResponse
     {
         $pessoa = $this->service->getById($id);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.view', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.view', (int) $pessoa->getCompanyId(), null));
 
         return $this->responseFactory->success(['item' => CadastroResponses::pessoa($pessoa)]);
     }
@@ -83,7 +83,7 @@ final class PessoaController extends AbstractController
     public function update(int $id, Request $request): JsonResponse
     {
         $pessoa = $this->service->getById($id);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.create_edit', (int) $pessoa->getCompanyId(), null));
 
         $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
@@ -110,7 +110,7 @@ final class PessoaController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $pessoa = $this->service->getById($id);
-        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.delete', (int) $pessoa->getCompany()->getId(), null));
+        $this->denyAccessUnlessGranted(PermissionVoter::ATTRIBUTE, new PermissionContext('cadastros.pessoas.delete', (int) $pessoa->getCompanyId(), null));
 
         $currentUser = $this->getUser();
         $currentUserId = $currentUser instanceof User ? (int) $currentUser->getId() : null;

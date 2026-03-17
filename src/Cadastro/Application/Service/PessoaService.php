@@ -43,7 +43,7 @@ final class PessoaService
 
         return $this->tx->run(function () use ($r, $company, $documento, $currentUserId): Pessoa {
             $p = new Pessoa(
-                $company,
+                (int)$company->getId(),
                 $r->tipoPessoa,
                 $r->nomeRazao,
                 $r->nomeFantasia,
@@ -70,7 +70,7 @@ final class PessoaService
 
         $documento = $this->normalizeDocumento($r->documento);
 
-        if ($documento !== null && $this->repo->existsByCompanyAndDocumento((int) $pessoa->getCompany()->getId(), $documento, $id)) {
+        if ($documento !== null && $this->repo->existsByCompanyAndDocumento((int) $pessoa->getCompanyId(), $documento, $id)) {
             throw new ValidationException(['documento' => ['Já existe uma pessoa com este documento na company informada.']]);
         }
 
@@ -88,7 +88,7 @@ final class PessoaService
                 $r->classificacao,
             );
             $this->repo->save($pessoa);
-            $this->audit->log((int) $pessoa->getCompany()->getId(), 'pessoa', 'cadastro.pessoa.updated', ['pessoaId' => $pessoa->getId()]);
+            $this->audit->log((int) $pessoa->getCompanyId(), 'pessoa', 'cadastro.pessoa.updated', ['pessoaId' => $pessoa->getId()]);
 
             return $pessoa;
         });
@@ -118,7 +118,7 @@ final class PessoaService
 
         $this->tx->run(function () use ($pessoa, $currentUserId): void {
             $this->repo->softDelete($pessoa);
-            $this->audit->log((int) $pessoa->getCompany()->getId(), 'pessoa', 'cadastro.pessoa.deleted', ['pessoaId' => $pessoa->getId()]);
+            $this->audit->log((int) $pessoa->getCompanyId(), 'pessoa', 'cadastro.pessoa.deleted', ['pessoaId' => $pessoa->getId()]);
         });
     }
 

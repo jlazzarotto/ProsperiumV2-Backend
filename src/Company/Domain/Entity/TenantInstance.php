@@ -10,7 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: DoctrineTenantInstanceRepository::class)]
 #[ORM\Table(name: 'tenant_instances')]
 #[ORM\UniqueConstraint(name: 'uk_tenant_instances_company', columns: ['company_id'])]
-#[ORM\UniqueConstraint(name: 'uk_tenant_instances_dbkey', columns: ['database_key'])]
 class TenantInstance
 {
     #[ORM\Id]

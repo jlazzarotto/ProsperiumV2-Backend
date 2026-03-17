@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace App\Company\Infrastructure\Persistence\Doctrine;
 
-use App\Company\Domain\Entity\Empresa;
+use App\Company\Domain\Entity\Tenant\Empresa;
 use App\Company\Domain\Repository\EmpresaRepositoryInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * @extends ServiceEntityRepository<Empresa>
+ * @extends EntityRepository<Empresa>
  */
-final class DoctrineEmpresaRepository extends ServiceEntityRepository implements EmpresaRepositoryInterface
+final class DoctrineEmpresaRepository extends EntityRepository implements EmpresaRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Empresa::class);
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
+        EntityManagerInterface $em
+    ) {
+        parent::__construct($em, $em->getClassMetadata(Empresa::class));
     }
 
     public function save(Empresa $empresa): void
@@ -40,7 +43,7 @@ final class DoctrineEmpresaRepository extends ServiceEntityRepository implements
     {
         $qb = $this->createQueryBuilder('empresa')
             ->select('COUNT(empresa.id)')
-            ->andWhere('empresa.company = :companyId')
+            ->andWhere('empresa.companyId = :companyId')
             ->andWhere('empresa.cnpj = :cnpj')
             ->andWhere('empresa.deletedAt IS NULL')
             ->setParameter('companyId', $companyId)
@@ -70,7 +73,7 @@ final class DoctrineEmpresaRepository extends ServiceEntityRepository implements
 
         if ($companyId !== null) {
             $qb
-                ->andWhere('empresa.company = :companyId')
+                ->andWhere('empresa.companyId = :companyId')
                 ->setParameter('companyId', $companyId);
         }
 

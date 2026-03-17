@@ -12,7 +12,7 @@ final class DoctrineRegraAutomaticaClassificacaoRepository extends ServiceEntity
     public function save(RegraAutomaticaClassificacao $regra): void { $em=$this->getEntityManager(); $em->persist($regra); $em->flush(); }
     public function findActiveMatches(int $companyId, ?int $empresaId, ?int $unidadeId, string $texto): array
     {
-        $qb=$this->createQueryBuilder('r')->andWhere('r.company = :companyId')->andWhere('r.status = :status')->andWhere('(r.empresa IS NULL OR r.empresa = :empresaId)')->andWhere('(r.unidade IS NULL OR r.unidade = :unidadeId)')->setParameter('companyId',$companyId)->setParameter('status','active')->setParameter('empresaId',$empresaId)->setParameter('unidadeId',$unidadeId);
+        $qb=$this->createQueryBuilder('r')->andWhere('r.companyId = :companyId')->andWhere('r.status = :status')->andWhere('(r.empresa IS NULL OR r.empresa = :empresaId)')->andWhere('(r.unidade IS NULL OR r.unidade = :unidadeId)')->setParameter('companyId',$companyId)->setParameter('status','active')->setParameter('empresaId',$empresaId)->setParameter('unidadeId',$unidadeId);
         $regras=$qb->getQuery()->getResult();
         return array_values(array_filter($regras, static fn(RegraAutomaticaClassificacao $regra): bool => $regra->matches($texto)));
     }

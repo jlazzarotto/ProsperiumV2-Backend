@@ -78,7 +78,7 @@ final class UserController extends AbstractController
         // ROLE_ADMIN só vê usuários da própria company
         if ($currentUser->isAdmin() && $companyId === null) {
             $companyId = $currentUser->getCompany()?->getId() !== null
-                ? (int) $currentUser->getCompany()->getId()
+                ? (int) $currentUser->getCompanyId()
                 : null;
         }
 

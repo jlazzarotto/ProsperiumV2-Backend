@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Company\Infrastructure\Persistence\Doctrine;
 
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Company\Domain\Repository\TenantUnidadeNegocioContextRepositoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 

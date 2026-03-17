@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Company\Domain\Repository;
 
-use App\Company\Domain\Entity\Empresa;
+use App\Company\Domain\Entity\Tenant\Empresa;
 
 interface EmpresaRepositoryInterface
 {

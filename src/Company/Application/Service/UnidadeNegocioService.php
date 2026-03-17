@@ -6,7 +6,7 @@ namespace App\Company\Application\Service;
 
 use App\Company\Application\DTO\CreateUnidadeNegocioRequest;
 use App\Company\Application\DTO\UpdateUnidadeNegocioRequest;
-use App\Company\Domain\Entity\UnidadeNegocio;
+use App\Company\Domain\Entity\Tenant\UnidadeNegocio;
 use App\Company\Domain\Repository\CompanyRepositoryInterface;
 use App\Company\Domain\Repository\TenantInstanceRepositoryInterface;
 use App\Company\Domain\Repository\UnidadeNegocioRepositoryInterface;
@@ -52,7 +52,7 @@ final class UnidadeNegocioService
         }
 
         $unidadeNegocio = $this->transactionRunner->run(function () use ($request, $company): UnidadeNegocio {
-            $unidadeNegocio = new UnidadeNegocio($company, $request->nome, $request->abreviatura, $request->status);
+            $unidadeNegocio = new UnidadeNegocio((int)$company->getId(), $request->nome, $request->abreviatura, $request->status);
             $this->unidadeNegocioRepository->save($unidadeNegocio);
             $this->auditoriaLogger->log(
                 (int) $company->getId(),
@@ -129,7 +129,7 @@ final class UnidadeNegocioService
             $unidadeNegocio->setNome($request->nome);
             $unidadeNegocio->setAbreviatura($request->abreviatura);
             $unidadeNegocio->setStatus($request->status);
-            $unidadeNegocio->setCompany($company);
+            $unidadeNegocio->setCompanyId((int)$company->getId());
             $this->unidadeNegocioRepository->save($unidadeNegocio);
             $this->auditoriaLogger->log(
                 (int) $company->getId(),

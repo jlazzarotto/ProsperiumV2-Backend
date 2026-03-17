@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Company\Domain\Entity;
+namespace App\Company\Domain\Entity\Tenant;
 
 use App\Company\Infrastructure\Persistence\Doctrine\DoctrineUnidadeNegocioRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -18,9 +18,8 @@ class UnidadeNegocio
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class)]
-    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private Company $company;
+    #[ORM\Column(name: 'company_id', type: 'bigint', options: ['unsigned' => true])]
+    private int $companyId;
 
     #[ORM\Column(length: 255)]
     private string $nome;
@@ -37,10 +36,10 @@ class UnidadeNegocio
     #[ORM\Column(name: 'updated_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(Company $company, string $nome, string $abreviatura, string $status = 'active')
+    public function __construct(int $companyId, string $nome, string $abreviatura, string $status = 'active')
     {
         $now = new \DateTimeImmutable();
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->nome = trim($nome);
         $this->abreviatura = trim($abreviatura);
         $this->status = $status;
@@ -53,9 +52,9 @@ class UnidadeNegocio
         return $this->id;
     }
 
-    public function getCompany(): Company
+    public function getCompanyId(): int
     {
-        return $this->company;
+        return $this->companyId;
     }
 
     public function getNome(): string
@@ -83,9 +82,9 @@ class UnidadeNegocio
         return $this->updatedAt;
     }
 
-    public function setCompany(Company $company): void
+    public function setCompanyId(int $companyId): void
     {
-        $this->company = $company;
+        $this->companyId = $companyId;
         $this->updatedAt = new \DateTimeImmutable();
     }
 

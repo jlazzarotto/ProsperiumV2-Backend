@@ -33,7 +33,7 @@ final class ParcelamentoService
             $soma += $valor;
             $parcelas[] = new TituloParcela(
                 $titulo,
-                $titulo->getCompany(),
+                $titulo->getCompanyId(),
                 $titulo->getEmpresa(),
                 $titulo->getUnidade(),
                 $parcelaData['numero'],

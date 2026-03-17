@@ -44,7 +44,7 @@ final class LoginService
         if ($user->isBloqueado()) {
             if ($user->isLocked()) {
                 $this->auditoriaLogger->log(
-                    $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+                    $user->getCompany()?->getId() !== null ? (int) $user->getCompanyId() : null,
                     'auth',
                     'identity.login.account_locked',
                     [
@@ -77,7 +77,7 @@ final class LoginService
             $this->userRepository->save($user);
 
             $this->auditoriaLogger->log(
-                $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+                $user->getCompany()?->getId() !== null ? (int) $user->getCompanyId() : null,
                 'auth',
                 'identity.login.invalid_password',
                 [
@@ -105,7 +105,7 @@ final class LoginService
         $this->userRepository->save($user);
 
         $this->auditoriaLogger->log(
-            $user->getCompany()?->getId() !== null ? (int) $user->getCompany()->getId() : null,
+            $user->getCompany()?->getId() !== null ? (int) $user->getCompanyId() : null,
             'auth',
             'identity.login.success',
             [
